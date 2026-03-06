@@ -7,6 +7,9 @@
 #include "glm.hpp"
 #include "ext.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 GLFWwindow* ventana;
 const unsigned int ANCHO_V = 1024, ALTO_V = 768;
 
@@ -37,10 +40,13 @@ int main()
      "layout (location = 0) in vec3 posicion; \n"
      "layout (location = 1) in vec3 colorDatos; \n"
      "layout (location = 2) in vec3 normalDatos; \n"
+     "layout (location = 3) in vec2 texturaST; \n"
 
      "out vec3 posicionVertice; \n"
      "out vec3 colorVertice; \n"
      "out vec3 normalVertice; \n"
+
+     "out vec2 coordsTextura; \n"
 
      "uniform mat4 modelo; \n"
      "uniform mat4 vista; \n"
@@ -51,9 +57,11 @@ int main()
      "void main() {\n"
      "  gl_Position = proy * vista * modelo * vec4(posicion, 1.0f); \n"
 
-     "  posicionVertice = posicion; \n"
+     "  posicionVertice = (modelo * vec4(posicion, 1.0f)).xyz; \n"
      "  colorVertice = colorDatos; \n"
-     "  normalVertice = normalDatos; \n"
+     "  normalVertice = mat3(transpose(inverse(modelo))) * normalDatos; \n"
+
+     "  coordsTextura = texturaST; \n" 
      " }\0";
 
     std::string fragmentShaderCodigo =
@@ -67,9 +75,13 @@ int main()
     "in vec3 colorVertice; \n"
     "in vec3 normalVertice; \n"
 
+    "in vec2 coordsTextura; \n"
+    "uniform sampler2D datosTextura; \n"
+
     "uniform vec3 posLuz; \n"
     "uniform vec3 colorLuz; \n"
     "uniform float intensidadAmbiente; \n" // % de luz
+    "uniform vec3 posCamara; \n"
 
     // Calc luz ambiente
     "vec3 luz_ambiente = colorLuz * intensidadAmbiente; \n"
@@ -78,12 +90,19 @@ int main()
     "vec3 dir_luz = normalize(posLuz - posicionVertice); \n"
     "vec3 normalUnitaria = normalize(normalVertice); \n"
     "float intensidadDifusa = max(dot(dir_luz, normalUnitaria), 0.0f); \n"
-    "vec3 luz_difusa = colorLuz * intensidadDifusa; \n"
+    "vec3 luz_difusa = colorLuz * intensidadDifusa * (1.0f - intensidadAmbiente ); \n"
 
-    "vec3 luz_final = luz_ambiente + luz_difusa;"
+    // Calc luz especular
+    "vec3 dir_camara = normalize(posCamara - posicionVertice); \n"
+    "vec3 dir_reflejada = reflect(-dir_luz, normalVertice); \n"
+    "float fuerzaEspecular = 1.0f;"
+    "float intensidadEspecular = pow( max(dot(dir_camara, dir_reflejada), 0.0f), 32); \n"
+    "vec3 luz_especular = colorLuz * intensidadEspecular * fuerzaEspecular; \n"
+
+    "vec3 luz_final = luz_ambiente + luz_difusa + luz_especular;"
 
     "void main() {\n"
-    "   FragColor = vec4(colorVertice * luz_final, 1.0f); \n"
+    "   FragColor = texture(datosTextura, coordsTextura) * vec4( colorVertice * luz_final, 1.0f); \n"
     " }\0";
 
     // Vertex shader
@@ -195,55 +214,99 @@ int main()
 
     float vertices[] = {
         // CARA TRASERA -> Z = 0
-         0,             0,            0,            1.0f, 0.0f, 0.0f,       // vertice 0  
-         0,             lado_cubo,    0,            1.0f, 0.0f, 0.0f,       // vertice 1
-         lado_cubo,     lado_cubo,    0,            1.0f, 0.0f, 0.0f,       // vertice 2 
-         lado_cubo,     0,            0,            1.0f, 0.0f, 0.0f,       // vertice 3 
+       //X              Y             Z              R     G     B       Norm_X, Norm_Y, Norm_Z      S, T 
+         0,             0,            0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       1, 0,      // vertice 0  
+         0,             lado_cubo,    0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       0, 0,      // vertice 1
+         lado_cubo,     lado_cubo,    0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       0, 1,      // vertice 2 
+         lado_cubo,     0,            0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       1, 1,      // vertice 3 
 
          // CARA FRONTAL -> Z = lado_cubo
        //X              Y             Z
-         0,             0,            lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 4
-         0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 5
-         lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 6 
-         lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 7 
+         0,             0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 0,      // vertice 4
+         0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 1,      // vertice 5
+         lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 1,      // vertice 6 
+         lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 0,      // vertice 7 
 
          // CARA IZQUIERDA -> X = 0
-         0,             0,            0,            0.0f, 0.0f, 1.0f,       // vertice 8
-         0,             0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 9
-         0,             lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 10 
-         0,             lado_cubo,    0,            0.0f, 0.0f, 1.0f,       // vertice 11 
+         0,             0,            0,            0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 8
+         0,             0,            lado_cubo,    0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 9
+         0,             lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 10 
+         0,             lado_cubo,    0,            0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 11 
 
          // CARA DERECHA -> X = lado_cubo
-         lado_cubo,     0,            0,            0.0f, 0.0f, 1.0f,       // vertice 12
-         lado_cubo,     0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 13
-         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 14 
-         lado_cubo,     lado_cubo,    0,            0.0f, 0.0f, 1.0f,       // vertice 15 
+         lado_cubo,     0,            0,            0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 12
+         lado_cubo,     0,            lado_cubo,    0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 13
+         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 14 
+         lado_cubo,     lado_cubo,    0,            0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 15 
 
          // CARA INFERIOR -> Y = 0
-         0,             0,            0,            0.0f, 1.0f, 0.0f,       // vertice 16
-         0,             0,            lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 17
-         lado_cubo,     0,            lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 18 
-         lado_cubo,     0,            0,            0.0f, 1.0f, 0.0f,       // vertice 19 
+         0,             0,            0,            0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 16
+         0,             0,            lado_cubo,    0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 17
+         lado_cubo,     0,            lado_cubo,    0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 18 
+         lado_cubo,     0,            0,            0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 19 
 
          // CARA SUPERIOR -> Y = lado_cubo
-         0,             lado_cubo,    0,            0.0f, 1.0f, 0.0f,       // vertice 20
-         0,             lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 21
-         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 22 
-         lado_cubo,     lado_cubo,    0,            0.0f, 1.0f, 0.0f,       // vertice 23 
+         0,             lado_cubo,    0,            0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 20
+         0,             lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 21
+         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 22 
+         lado_cubo,     lado_cubo,    0,            0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 23 
     };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 24, vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 11 * 24, vertices, GL_DYNAMIC_DRAW);
 
 
     // INIT - Paso 4
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // pos
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // color
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // normal
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0); // pos
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float))); // color
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float))); // normal
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float))); // text ST
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
 
     // INIT - Paso 5
     glBindVertexArray(0); // VAO
+
+
+
+
+    // TEXTURAS
+
+    int ancho_textura, alto_textura, numero_canales;
+    unsigned char* datos_textura = stbi_load("texture/brick_texture.jpg", &ancho_textura, &alto_textura, &numero_canales, 0);
+
+    unsigned int texture_id_0;
+    glGenTextures(1, &texture_id_0);
+    glBindTexture(GL_TEXTURE_2D, texture_id_0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (datos_textura) {
+        std::cout << "Textura cargada\n";
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ancho_textura, alto_textura, 0, GL_RGB, GL_UNSIGNED_BYTE, datos_textura);
+        // target -> tipo de texture
+        // nivel del mipmap -> 0
+        // canales de la textura final internamente
+        // dimensiones (alto y ancho)
+        // borde
+        // formato si se pregunta
+        // tipo de datos (unsigned char es 1 byte) (unsigned int son 4 bytes)
+        // datos
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "No se ha encontrado la textura\n";
+    }
+    // liberar los datos
+    stbi_image_free(datos_textura);
+
+
+
+
 
     float angulo_cubo = 0.0f;
     float angulo = 90.0f;
@@ -258,41 +321,46 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, ANCHO_V, ALTO_V);
 
-        //int modificador_de_color = glGetUniformLocation(id_programa, "colorDesdeMain");
-        //float R = 0.5f;
-        //glUniform3f(modificador_de_color, 0.5, 0.5, 0.0);
-
         // ILUMINACION
 
         int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
         glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
 
+        int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
+        glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
+
         int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
         glUniform1f(modificador_de_intensidadAmbiente, 0.2);
+
+        int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
+        glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
+
+        int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
+        glUniform1i(modificador_de_datosTextura, 0);
 
 
         int modelo = glGetUniformLocation(id_programa, "modelo");
         glm::mat4 ident = glm::mat4(1.0f);
 
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            angulo += 0.05;
+            angulo += 0.5;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            angulo -= 0.05;
+            angulo -= 0.5;
         }
 
         if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
-            pos_camara += frente_camara * 0.03f;
+            pos_camara += frente_camara * 0.3f;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            pos_camara -= frente_camara * 0.03f;
+            pos_camara -= frente_camara * 0.3f;
         }
 
         if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
-            angulo_cubo += 0.05;
+            angulo_cubo += 0.5;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
-            angulo_cubo -= 0.05;
+            angulo_cubo -= 0.5;
         }
   
 
