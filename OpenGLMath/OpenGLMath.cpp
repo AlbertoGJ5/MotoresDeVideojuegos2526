@@ -133,26 +133,52 @@ int main()
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
+    //unsigned int indices[] = {
+    //    // CARA FRONTAL
+    //    0, 3, 1,
+    //    1, 3, 2,
+
+    //    // CARA DERECHA
+    //    3, 7, 2,
+    //    7, 6, 2,
+
+    //    // CARA IZQUIERA
+    //    4, 0, 1,
+    //    1, 5, 4,
+
+    //    // CARA INFERIOR
+    //    3, 4, 7,
+    //    3, 0, 4,
+
+    //    // CARA SUPERIOR
+    //    2, 6, 5,
+    //    2, 5, 1,
+
+    //    // CARA TRASERA
+    //    5, 6, 7,
+    //    4, 5, 7
+    //};
+
     unsigned int indices[] = {
         // CARA FRONTAL
         0, 3, 1,
         1, 3, 2,
 
         // CARA DERECHA
-        3, 7, 2,
-        7, 6, 2,
+        12, 15, 14,
+        14, 13, 12,
 
         // CARA IZQUIERA
-        4, 0, 1,
-        1, 5, 4,
+        8, 9, 10,
+        10, 11, 8,
 
         // CARA INFERIOR
-        3, 4, 7,
-        3, 0, 4,
+        16, 19, 18,
+        18, 17, 16,
 
         // CARA SUPERIOR
-        2, 6, 5,
-        2, 5, 1,
+        20, 21, 22,
+        20, 22, 23,
 
         // CARA TRASERA
         5, 6, 7,
@@ -168,20 +194,44 @@ int main()
     float lado_cubo = 1;
 
     float vertices[] = {
-        // CARA FRONTAL -> Z = 0
+        // CARA TRASERA -> Z = 0
          0,             0,            0,            1.0f, 0.0f, 0.0f,       // vertice 0  
          0,             lado_cubo,    0,            1.0f, 0.0f, 0.0f,       // vertice 1
          lado_cubo,     lado_cubo,    0,            1.0f, 0.0f, 0.0f,       // vertice 2 
          lado_cubo,     0,            0,            1.0f, 0.0f, 0.0f,       // vertice 3 
 
-         // CARA TRASERA -> Z = 0
+         // CARA FRONTAL -> Z = lado_cubo
        //X              Y             Z
-         0,             0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 4
-         0,             lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 5
-         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 6 
-         lado_cubo,     0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 7 
+         0,             0,            lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 4
+         0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 5
+         lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 6 
+         lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 0.0f,       // vertice 7 
+
+         // CARA IZQUIERDA -> X = 0
+         0,             0,            0,            0.0f, 0.0f, 1.0f,       // vertice 8
+         0,             0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 9
+         0,             lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 10 
+         0,             lado_cubo,    0,            0.0f, 0.0f, 1.0f,       // vertice 11 
+
+         // CARA DERECHA -> X = lado_cubo
+         lado_cubo,     0,            0,            0.0f, 0.0f, 1.0f,       // vertice 12
+         lado_cubo,     0,            lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 13
+         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,       // vertice 14 
+         lado_cubo,     lado_cubo,    0,            0.0f, 0.0f, 1.0f,       // vertice 15 
+
+         // CARA INFERIOR -> Y = 0
+         0,             0,            0,            0.0f, 1.0f, 0.0f,       // vertice 16
+         0,             0,            lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 17
+         lado_cubo,     0,            lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 18 
+         lado_cubo,     0,            0,            0.0f, 1.0f, 0.0f,       // vertice 19 
+
+         // CARA SUPERIOR -> Y = lado_cubo
+         0,             lado_cubo,    0,            0.0f, 1.0f, 0.0f,       // vertice 20
+         0,             lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 21
+         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,       // vertice 22 
+         lado_cubo,     lado_cubo,    0,            0.0f, 1.0f, 0.0f,       // vertice 23 
     };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 8, vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 24, vertices, GL_DYNAMIC_DRAW);
 
 
     // INIT - Paso 4
@@ -195,7 +245,7 @@ int main()
     // INIT - Paso 5
     glBindVertexArray(0); // VAO
 
-    float tx = 0, ty = 0;
+    float angulo_cubo = 0.0f;
     float angulo = 90.0f;
 
     glm::vec3 pos_camara = glm::vec3({ 0.25, 0, 5 });
@@ -225,21 +275,29 @@ int main()
         glm::mat4 ident = glm::mat4(1.0f);
 
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            angulo += 0.5;
+            angulo += 0.05;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            angulo -= 0.5;
+            angulo -= 0.05;
         }
 
         if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
-            pos_camara += frente_camara * 0.3f;
+            pos_camara += frente_camara * 0.03f;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            pos_camara -= frente_camara * 0.3f;
+            pos_camara -= frente_camara * 0.03f;
+        }
+
+        if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
+            angulo_cubo += 0.05;
+        }
+        else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
+            angulo_cubo -= 0.05;
         }
   
-        //ident = glm::translate(ident, glm::vec3(tx, ty, 0));
-        //ident = glm::rotate(ident, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        //ident = glm::translate(ident, glm::vec3(-0.5, -0.5, -0.5));
+        ident = glm::rotate(ident, glm::radians(angulo_cubo), glm::vec3(1.0f, 1.0f, 0.0f));
         //ident = glm::scale(ident, glm::vec3(1, 1, 1));
 
         glUniformMatrix4fv(modelo, 1, GL_FALSE, glm::value_ptr(ident));
@@ -258,7 +316,7 @@ int main()
 
 
         int proy = glGetUniformLocation(id_programa, "proy");
-        glm::mat4 ident3 = glm::perspective( // conico
+        glm::mat4 ident3 = glm::perspective( // conica
             glm::radians(45.0f),
             (float)ANCHO_V / ALTO_V,
             0.1f,
