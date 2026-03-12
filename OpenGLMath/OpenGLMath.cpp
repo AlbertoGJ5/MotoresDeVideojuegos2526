@@ -10,6 +10,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "Cubo.cpp"
+
 GLFWwindow* ventana;
 const unsigned int ANCHO_V = 1024, ALTO_V = 768;
 
@@ -142,133 +144,6 @@ int main()
     glUseProgram(id_programa);
 
 
-    // INIT - Paso 1
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    // INIT - Paso 2
-    unsigned int IBO;
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-    //unsigned int indices[] = {
-    //    // CARA FRONTAL
-    //    0, 3, 1,
-    //    1, 3, 2,
-
-    //    // CARA DERECHA
-    //    3, 7, 2,
-    //    7, 6, 2,
-
-    //    // CARA IZQUIERA
-    //    4, 0, 1,
-    //    1, 5, 4,
-
-    //    // CARA INFERIOR
-    //    3, 4, 7,
-    //    3, 0, 4,
-
-    //    // CARA SUPERIOR
-    //    2, 6, 5,
-    //    2, 5, 1,
-
-    //    // CARA TRASERA
-    //    5, 6, 7,
-    //    4, 5, 7
-    //};
-
-    unsigned int indices[] = {
-        // CARA FRONTAL
-        0, 3, 1,
-        1, 3, 2,
-
-        // CARA DERECHA
-        12, 15, 14,
-        14, 13, 12,
-
-        // CARA IZQUIERA
-        8, 9, 10,
-        10, 11, 8,
-
-        // CARA INFERIOR
-        16, 19, 18,
-        18, 17, 16,
-
-        // CARA SUPERIOR
-        20, 21, 22,
-        20, 22, 23,
-
-        // CARA TRASERA
-        5, 6, 7,
-        4, 5, 7
-    };
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * 12, indices, GL_DYNAMIC_DRAW);
-
-    // INIT - Paso 3
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    float lado_cubo = 1;
-
-    float vertices[] = {
-        // CARA TRASERA -> Z = 0
-       //X              Y             Z              R     G     B       Norm_X, Norm_Y, Norm_Z      S, T 
-         0,             0,            0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       1, 0,      // vertice 0  
-         0,             lado_cubo,    0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       0, 0,      // vertice 1
-         lado_cubo,     lado_cubo,    0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       0, 1,      // vertice 2 
-         lado_cubo,     0,            0,            1.0f, 0.0f, 0.0f,      0,      0,      -1,       1, 1,      // vertice 3 
-
-         // CARA FRONTAL -> Z = lado_cubo
-       //X              Y             Z
-         0,             0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 0,      // vertice 4
-         0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 1,      // vertice 5
-         lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 1,      // vertice 6 
-         lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 0,      // vertice 7 
-
-         // CARA IZQUIERDA -> X = 0
-         0,             0,            0,            0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 8
-         0,             0,            lado_cubo,    0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 9
-         0,             lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 10 
-         0,             lado_cubo,    0,            0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 11 
-
-         // CARA DERECHA -> X = lado_cubo
-         lado_cubo,     0,            0,            0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 12
-         lado_cubo,     0,            lado_cubo,    0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 13
-         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 14 
-         lado_cubo,     lado_cubo,    0,            0.0f, 0.0f, 1.0f,      1,      0,      0,        0, 0,      // vertice 15 
-
-         // CARA INFERIOR -> Y = 0
-         0,             0,            0,            0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 16
-         0,             0,            lado_cubo,    0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 17
-         lado_cubo,     0,            lado_cubo,    0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 18 
-         lado_cubo,     0,            0,            0.0f, 1.0f, 0.0f,      0,      -1,      0,       0, 0,      // vertice 19 
-
-         // CARA SUPERIOR -> Y = lado_cubo
-         0,             lado_cubo,    0,            0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 20
-         0,             lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 21
-         lado_cubo,     lado_cubo,    lado_cubo,    0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 22 
-         lado_cubo,     lado_cubo,    0,            0.0f, 1.0f, 0.0f,      0,      1,       0,       0, 0,      // vertice 23 
-    };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 11 * 24, vertices, GL_DYNAMIC_DRAW);
-
-
-    // INIT - Paso 4
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0); // pos
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float))); // color
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float))); // normal
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float))); // text ST
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
-
-    // INIT - Paso 5
-    glBindVertexArray(0); // VAO
-
-
-
 
     // TEXTURAS
 
@@ -315,6 +190,9 @@ int main()
     glm::vec3 frente_camara = glm::vec3({ 0, 0, -1 });
     glm::vec3 up_camara = glm::vec3({ 0, 1, 0 });
 
+    Cubo c(1);
+    Cubo c2(1, {-2,0,0} );
+
     glEnable(GL_DEPTH_TEST);
 
     do {
@@ -339,9 +217,6 @@ int main()
         glUniform1i(modificador_de_datosTextura, 0);
 
 
-        int modelo = glGetUniformLocation(id_programa, "modelo");
-        glm::mat4 ident = glm::mat4(1.0f);
-
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
             angulo += 0.5;
         }
@@ -356,20 +231,25 @@ int main()
             pos_camara -= frente_camara * 0.3f;
         }
 
-        if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
-            angulo_cubo += 0.5;
+        if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_PRESS) {
+            c2.setPos(c2.getPos() + glm::vec3(0.1, 0, 0));
+        }
+        else if (glfwGetKey(ventana, GLFW_KEY_A) == GLFW_PRESS) {
+            c2.setPos(c2.getPos() + glm::vec3(-0.1, 0, 0));
+        }
+        else if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
+            c2.setPos(c2.getPos() + glm::vec3(0, 0.1, 0));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
-            angulo_cubo -= 0.5;
+            c2.setPos(c2.getPos() + glm::vec3(0, -0.1, 0));
+        }
+        else if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
+            c2.setPos(c2.getPos() + glm::vec3(0, 0, -0.1));
+        }
+        else if (glfwGetKey(ventana, GLFW_KEY_E) == GLFW_PRESS) {
+            c2.setPos(c2.getPos() + glm::vec3(0, 0, 0.1));
         }
   
-
-        //ident = glm::translate(ident, glm::vec3(-0.5, -0.5, -0.5));
-        ident = glm::rotate(ident, glm::radians(angulo_cubo), glm::vec3(1.0f, 1.0f, 0.0f));
-        //ident = glm::scale(ident, glm::vec3(1, 1, 1));
-
-        glUniformMatrix4fv(modelo, 1, GL_FALSE, glm::value_ptr(ident));
-
      
         int vista = glGetUniformLocation(id_programa, "vista");
         frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
@@ -400,11 +280,15 @@ int main()
         //);
         glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
 
+        c.draw(id_programa);
+        c2.draw(id_programa);
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 3 * 12, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
+        if (c2.colision(&c)) {
+            std::cout << "COLISION\n";
+        }
+        else {
+            std::cout << "NO COLISION\n";
+        }
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();
