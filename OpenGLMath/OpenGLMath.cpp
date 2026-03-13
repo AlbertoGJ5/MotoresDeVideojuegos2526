@@ -244,10 +244,10 @@ int main()
             c2.setPos(c2.getPos() + glm::vec3(0, -0.1, 0));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(0, 0, -0.1));
+            c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_E) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(0, 0, 0.1));
+            c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
         }
   
      

@@ -1,3 +1,6 @@
+#pragma once
+
+#include <iostream>
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -8,14 +11,15 @@
 
 class Cubo {
 	float lado_cubo;
-    glm::vec3 pos;
+    glm::vec3 pos, giro;
     bool FLAG_CAMBIO_VERTICES;
     unsigned int VAO;
 
 public: 
-	Cubo() : lado_cubo(1), FLAG_CAMBIO_VERTICES(true), pos(0,0,0), VAO(0) {};
-	Cubo(float lado) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(0, 0, 0), VAO(0) {};
-    Cubo(float lado, glm::vec3 pos) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0) {};
+	Cubo() : lado_cubo(1), FLAG_CAMBIO_VERTICES(true), pos(0,0,0), VAO(0), giro(0, 0, 0)  {};
+	Cubo(float lado) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(0, 0, 0), VAO(0), giro(0, 0, 0) {};
+    Cubo(float lado, glm::vec3 pos) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(0, 0, 0) {};
+    Cubo(float lado, glm::vec3 pos, glm::vec3 giro) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(giro) {};
 
     void setPos(glm::vec3 pos) {
         this->pos = pos;
@@ -26,6 +30,17 @@ public:
 
     glm::vec3 getPos() {
         return pos;
+    }
+
+    void setGiro(glm::vec3 giro) {
+        this->giro = giro;
+    }
+    void setGiro(float x, float y, float z) {
+        this->giro = glm::vec3(x, y, z);
+    }
+
+    glm::vec3 getGiro() {
+        return giro;
     }
 
 	void drawInit() {
@@ -135,8 +150,16 @@ public:
         int modelo = glGetUniformLocation(id_programa, "modelo");
         glm::mat4 ident = glm::mat4(1.0f);
 
+       
+        
         ident = glm::translate(ident, pos);
-        //ident = glm::rotate(ident, glm::radians(angulo_cubo), glm::vec3(1.0f, 1.0f, 0.0f));
+
+        ident = glm::rotate(ident, glm::radians(-giro.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        ident = glm::rotate(ident, glm::radians(-giro.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        ident = glm::rotate(ident, glm::radians(-giro.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+       
+
         //ident = glm::scale(ident, glm::vec3(1, 1, 1));
 
         glUniformMatrix4fv(modelo, 1, GL_FALSE, glm::value_ptr(ident));
@@ -149,9 +172,11 @@ public:
 
     float left() {
         return this->pos.x;
+        //this->pos.x + (lado_cubo) * glm::sin(glm::radians(giro.z)) * glm::sin(glm::radians(giro.y));
     }
     float right() {
         return this->pos.x + lado_cubo;
+        //this->pos.x + (lado_cubo) * glm::cos(glm::radians(giro.z)) * glm::cos(glm::radians(giro.y));
     }
     float down() {
         return this->pos.y;
@@ -168,6 +193,8 @@ public:
 
 
     bool colision(Cubo* otro) {
+        std::cout << this->left() << "  " << this->right() << "\n";
+
         return this->left() < otro->right() && this->right() > otro->left() &&
             this->down() < otro->up() && this->up() > otro->down() && 
             this->back() < otro->front() && this->front() > otro->back();
