@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -153,7 +154,6 @@ public:
        
         
         ident = glm::translate(ident, pos);
-
         ident = glm::rotate(ident, glm::radians(-giro.x), glm::vec3(1.0f, 0.0f, 0.0f));
         ident = glm::rotate(ident, glm::radians(-giro.y), glm::vec3(0.0f, 1.0f, 0.0f));
         ident = glm::rotate(ident, glm::radians(-giro.z), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -192,12 +192,109 @@ public:
     }
 
 
-    bool colision(Cubo* otro) {
+    /*bool colision(Cubo* otro) {
         std::cout << this->left() << "  " << this->right() << "\n";
 
         return this->left() < otro->right() && this->right() > otro->left() &&
             this->down() < otro->up() && this->up() > otro->down() && 
             this->back() < otro->front() && this->front() > otro->back();
+    }*/
+
+    bool colision(Cubo* otro) {
+
+        std::vector<glm::vec3> vertices = verticesTransf(this);
+        std::vector<glm::vec3> vertices_otro = verticesTransf(otro);
+
+        std::vector<glm::vec3> normales = normalesTransf(this);
+        std::vector<glm::vec3> normales_otro = normalesTransf(otro);
+
+        std::vector<glm::vec3> ejes;
+        for (int i = 0; i < normales.size(); i++) {
+            ejes.push_back(normales[i]);
+            ejes.push_back(normales_otro[i]);
+        }
+
+        //std::vector<float> vertices_proyectados;
+        float min, min_otro, min_total, max, max_otro, max_total;
+
+        for (int i = 0; i < ejes.size(); i++) {
+            min = min_otro = min_total = INT_MAX;
+            max = max_otro = max_total = INT_MIN;
+
+            for (int j = 0; j < vertices.size(); j++) {
+                //vertices_proyectados.push_back( glm::dot(vertices[j], ejes[i]) );
+                float vert_proy = glm::dot(vertices[j], ejes[i]);
+                if (min > vert_proy) min = vert_proy;
+                if (max < vert_proy) max = vert_proy;
+                if (min_total > vert_proy) min_total = vert_proy;
+                if (max_total < vert_proy) max_total = vert_proy;
+
+                float vert_proy_otro = glm::dot(vertices_otro[j], ejes[i]);
+                if (min_otro > vert_proy_otro) min_otro = vert_proy_otro;
+                if (max_otro < vert_proy_otro) max_otro = vert_proy_otro;
+                if (min_total > vert_proy_otro) min_total = vert_proy_otro;
+                if (max_total < vert_proy_otro) max_total = vert_proy_otro;
+            }
+
+            std::cout << "Total:" << max_total - min_total << "\n";
+            std::cout << "Yo:" << max - min << "\n";
+            std::cout << "otro:" << max_otro - min_otro << "\n";
+
+            if (max_total - min_total > max - min + max_otro - min_otro) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    std::vector<glm::vec3> verticesTransf(Cubo* cubo) {
+        glm::vec3 vertices[] = {
+            {0,                  0,                  0},
+            {cubo->lado_cubo,    0,                  0},
+            {cubo->lado_cubo,    cubo->lado_cubo,    0},
+            {0,                  cubo->lado_cubo,    0},
+
+            {0,                  0,                  cubo->lado_cubo},
+            {cubo->lado_cubo,    0,                  cubo->lado_cubo},
+            {cubo->lado_cubo,    cubo->lado_cubo,    cubo->lado_cubo},
+            {0,                  cubo->lado_cubo,    cubo->lado_cubo},
+        };
+
+        glm::mat4 transf = glm::mat4(1.0f);
+        transf = glm::translate(transf, cubo->pos);
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.x)), glm::vec3(1.0f, 0.0f, 0.0f));
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.y)), glm::vec3(0.0f, 1.0f, 0.0f));
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.z)), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        std::vector<glm::vec3> vert_trans;
+
+        for (int i = 0; i < 8; i++) {
+            vert_trans.push_back( transf * glm::vec4(vertices[i], 1.0f));
+        }
+
+        return vert_trans;
+    }
+
+    std::vector<glm::vec3> normalesTransf(Cubo* cubo) {
+        glm::vec3 normales[] = {
+            {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1},
+        };
+
+        glm::mat4 transf = glm::mat4(1.0f);
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.x)), glm::vec3(1.0f, 0.0f, 0.0f));
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.y)), glm::vec3(0.0f, 1.0f, 0.0f));
+        transf = glm::rotate(transf, glm::radians(-(cubo->giro.z)), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        std::vector<glm::vec3> norm_trans;
+
+        for (int i = 0; i < 3; i++) {
+            norm_trans.push_back(transf * glm::vec4(normales[i], 1.0f));
+        }
+
+        return norm_trans;
     }
 
 };
