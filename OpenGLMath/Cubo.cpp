@@ -10,9 +10,26 @@
 #include "ext.hpp"
 
 
+struct ReporteColision {
+    bool hayColision;
+    float dist_penetr;
+    glm::vec3 eje_penetr;
+
+    ReporteColision(bool hayColision) : hayColision(hayColision) {
+        dist_penetr = 0;
+        eje_penetr = { 0,0,0 };
+    }
+
+    ReporteColision(bool hayColision, float dist_penetr, glm::vec3 eje_penetr) :
+        hayColision(hayColision), dist_penetr(dist_penetr), eje_penetr(eje_penetr) {}
+
+    operator bool() { return hayColision;}
+};
+
+
 class Cubo {
 	float lado_cubo;
-    glm::vec3 pos, giro;
+    glm::vec3 pos, pos_prev, giro;
     bool FLAG_CAMBIO_VERTICES;
     unsigned int VAO;
 
@@ -23,14 +40,20 @@ public:
     Cubo(float lado, glm::vec3 pos, glm::vec3 giro) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(giro) {};
 
     void setPos(glm::vec3 pos) {
+        pos_prev = this->pos;
         this->pos = pos;
     }
     void setPos(float x, float y, float z) {
+        pos_prev = this->pos;
         this->pos = glm::vec3(x,y,z);
     }
 
     glm::vec3 getPos() {
         return pos;
+    }
+
+    glm::vec3 getPosPrev() {
+        return pos_prev;
     }
 
     void setGiro(glm::vec3 giro) {
@@ -200,7 +223,7 @@ public:
             this->back() < otro->front() && this->front() > otro->back();
     }*/
 
-    bool colision(Cubo* otro) {
+    ReporteColision colision(Cubo* otro) {
 
         std::vector<glm::vec3> vertices = verticesTransf(this);
         std::vector<glm::vec3> vertices_otro = verticesTransf(otro);
@@ -215,6 +238,8 @@ public:
         }
 
         //std::vector<float> vertices_proyectados;
+        float min_penetracion = INT_MAX;
+        glm::vec3 eje_min_penetracion;
         float min, min_otro, min_total, max, max_otro, max_total;
 
         for (int i = 0; i < ejes.size(); i++) {
@@ -240,12 +265,30 @@ public:
             std::cout << "Yo:" << max - min << "\n";
             std::cout << "otro:" << max_otro - min_otro << "\n";
 
+
+
+
             if (max_total - min_total > max - min + max_otro - min_otro) {
-                return false;
+                return ReporteColision(false);
+            }
+            else {
+
+                if (glm::abs(min - max_otro) < min_penetracion || glm::abs(min_otro - max) < min_penetracion) {
+                    eje_min_penetracion = ejes[i];
+
+                    if (glm::abs(min - max_otro) < glm::abs(min_otro - max)) {
+                        min_penetracion = glm::abs(min - max_otro);
+                    }
+                    else {
+                        min_penetracion = glm::abs(min_otro - max);
+                    }
+                }
             }
         }
 
-        return true;
+        std::cout << "penetracion:" << min_penetracion << "\n";
+        std::cout << "eje:" << eje_min_penetracion.x << ", " << eje_min_penetracion.y << ", " << eje_min_penetracion.z << "\n";
+        return ReporteColision(true, min_penetracion, eje_min_penetracion);
     }
 
     std::vector<glm::vec3> verticesTransf(Cubo* cubo) {

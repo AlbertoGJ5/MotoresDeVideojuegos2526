@@ -13,7 +13,7 @@
 #include "Cubo.cpp"
 
 GLFWwindow* ventana;
-const unsigned int ANCHO_V = 1024, ALTO_V = 768;
+const unsigned int ANCHO_V = 1920, ALTO_V = 1080;
 
 //using namespace glm;
 
@@ -195,11 +195,20 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
+    float dif_tiempo = 0.0f;
+    float ultimo_tiempo = 0.0f;
+
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, ANCHO_V, ALTO_V);
-
+        
         // ILUMINACION
+
+        float ahora = glfwGetTime();
+        std::cout << "ahora: " << ahora << "\n";
+        dif_tiempo = ahora - ultimo_tiempo;
+        std::cout << "dif_tiempo: " << dif_tiempo << "\n";
+        ultimo_tiempo = ahora;
 
         int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
         glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
@@ -280,15 +289,28 @@ int main()
         //);
         glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
 
-        c.draw(id_programa);
-        c2.draw(id_programa);
-
-        if (c2.colision(&c)) {
+        
+        if (ReporteColision reporte = c2.colision(&c)) {
             std::cout << "COLISION\n";
+
+            float pos_proy = glm::dot(c2.getPos(), reporte.eje_penetr);
+            float pos_prev_proy = glm::dot(c2.getPosPrev(), reporte.eje_penetr);
+            float dist = pos_proy - pos_prev_proy;
+            std::cout << "dir: " << dist << "\n";
+
+            float dir = (dist > 0) ? 1 : -1;
+            glm::vec3 mvt = reporte.eje_penetr * reporte.dist_penetr * dir;
+            std::cout << "eje:" << mvt.x << ", " << mvt.y << ", " << mvt.z << "\n";
+            c2.setPos(c2.getPos() - mvt);
         }
         else {
             std::cout << "NO COLISION\n";
         }
+
+        c.draw(id_programa);
+        c2.draw(id_programa);
+
+
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();
