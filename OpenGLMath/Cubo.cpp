@@ -29,15 +29,16 @@ struct ReporteColision {
 
 class Cubo {
 	float lado_cubo;
-    glm::vec3 pos, pos_prev, giro;
+    glm::vec3 pos, pos_prev, giro, vel, fuerza;
+    float masa;
     bool FLAG_CAMBIO_VERTICES;
     unsigned int VAO;
 
 public: 
-	Cubo() : lado_cubo(1), FLAG_CAMBIO_VERTICES(true), pos(0,0,0), VAO(0), giro(0, 0, 0)  {};
-	Cubo(float lado) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(0, 0, 0), VAO(0), giro(0, 0, 0) {};
-    Cubo(float lado, glm::vec3 pos) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(0, 0, 0) {};
-    Cubo(float lado, glm::vec3 pos, glm::vec3 giro) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(giro) {};
+	Cubo() : lado_cubo(1), FLAG_CAMBIO_VERTICES(true), pos(0,0,0), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
+	Cubo(float lado) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(0, 0, 0), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
+    Cubo(float lado, glm::vec3 pos) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
+    Cubo(float lado, glm::vec3 pos, glm::vec3 giro) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(giro), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
 
     void setPos(glm::vec3 pos) {
         pos_prev = this->pos;
@@ -55,6 +56,37 @@ public:
     glm::vec3 getPosPrev() {
         return pos_prev;
     }
+
+    void setVel(glm::vec3 vel) {
+        this->vel = vel;
+    }
+    void setVel(float x, float y, float z) {
+        this->vel = glm::vec3(x, y, z);
+    }
+    glm::vec3 getVel() {
+        return vel;
+    }
+
+    void setAcel(glm::vec3 acel) {
+        this->fuerza = acel * masa;
+    }
+    void setAcel(float x, float y, float z) {
+        this->fuerza = glm::vec3(x, y, z) * masa;
+    }
+    glm::vec3 getAcel() {
+        return fuerza / masa;
+    }
+
+    void setFuerza(glm::vec3 fuerza) {
+        this->fuerza = fuerza;
+    }
+    void setFuerza(float x, float y, float z) {
+        this->fuerza = glm::vec3(x, y, z);
+    }
+    glm::vec3 getFuerza() {
+        return fuerza;
+    }
+
 
     void setGiro(glm::vec3 giro) {
         this->giro = giro;
@@ -214,6 +246,26 @@ public:
         return this->pos.z;
     }
 
+    glm::vec3 ant_fuerza;
+    void update(float delta_time) {
+
+        vel += fuerza / masa * delta_time;
+        pos += vel * delta_time;
+
+        // Friccion
+        ant_fuerza = fuerza;
+        fuerza -= vel * 0.5f;
+        if (vel.x > 1) {
+            fuerza.x = 0;
+            vel.x = 1;
+        }
+        else if (vel.x < -1) {
+            fuerza.x = 0;
+            vel.x = -1;
+        }
+
+    }
+
 
     /*bool colision(Cubo* otro) {
         std::cout << this->left() << "  " << this->right() << "\n";
@@ -261,9 +313,9 @@ public:
                 if (max_total < vert_proy_otro) max_total = vert_proy_otro;
             }
 
-            std::cout << "Total:" << max_total - min_total << "\n";
-            std::cout << "Yo:" << max - min << "\n";
-            std::cout << "otro:" << max_otro - min_otro << "\n";
+            //std::cout << "Total:" << max_total - min_total << "\n";
+            //std::cout << "Yo:" << max - min << "\n";
+            //std::cout << "otro:" << max_otro - min_otro << "\n";
 
 
 
@@ -286,8 +338,8 @@ public:
             }
         }
 
-        std::cout << "penetracion:" << min_penetracion << "\n";
-        std::cout << "eje:" << eje_min_penetracion.x << ", " << eje_min_penetracion.y << ", " << eje_min_penetracion.z << "\n";
+        //std::cout << "penetracion:" << min_penetracion << "\n";
+        //std::cout << "eje:" << eje_min_penetracion.x << ", " << eje_min_penetracion.y << ", " << eje_min_penetracion.z << "\n";
         return ReporteColision(true, min_penetracion, eje_min_penetracion);
     }
 

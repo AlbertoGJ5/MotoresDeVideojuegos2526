@@ -205,9 +205,9 @@ int main()
         // ILUMINACION
 
         float ahora = glfwGetTime();
-        std::cout << "ahora: " << ahora << "\n";
+        //std::cout << "ahora: " << ahora << "\n";
         dif_tiempo = ahora - ultimo_tiempo;
-        std::cout << "dif_tiempo: " << dif_tiempo << "\n";
+        //std::cout << "dif_tiempo: " << dif_tiempo << "\n";
         ultimo_tiempo = ahora;
 
         int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
@@ -241,18 +241,24 @@ int main()
         }
 
         if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(0.1, 0, 0));
+            c2.setAcel(glm::vec3(2, 0, 0));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_A) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(-0.1, 0, 0));
+            c2.setAcel(glm::vec3(-2, 0, 0));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
             c2.setPos(c2.getPos() + glm::vec3(0, 0.1, 0));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
             c2.setPos(c2.getPos() + glm::vec3(0, -0.1, 0));
+        } 
+        else if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_RELEASE || glfwGetKey(ventana, GLFW_KEY_A) == GLFW_RELEASE) {
+            c2.setAcel(glm::vec3(0, c2.getAcel().y, c2.getAcel().z));
+            c2.setVel(glm::vec3(0, c2.getVel().y, c2.getVel().z));
         }
-        else if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
+
+
+        if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
             c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_E) == GLFW_PRESS) {
@@ -302,12 +308,23 @@ int main()
             glm::vec3 mvt = reporte.eje_penetr * reporte.dist_penetr * dir;
             std::cout << "eje:" << mvt.x << ", " << mvt.y << ", " << mvt.z << "\n";
             c2.setPos(c2.getPos() - mvt);
+
+            //std::cout << "FUERZA:" << c2.getFuerza().x << ", " << c2.getFuerza().y << ", " << c2.getFuerza().z << "\n";
+
+            c2.setFuerza(c2.getFuerza() - (glm::dot(c2.getFuerza(), reporte.eje_penetr) * reporte.eje_penetr) );
+            c2.setVel(c2.getVel() - (glm::dot(c2.getVel(), reporte.eje_penetr) * reporte.eje_penetr));
+
+
+            //std::cout << "EJE:" << reporte.eje_penetr.x << ", " << reporte.eje_penetr.y << ", " << reporte.eje_penetr.z << "\n";
         }
         else {
-            std::cout << "NO COLISION\n";
+            //std::cout << "NO COLISION\n";
         }
 
-        c.draw(id_programa);
+        c.update(dif_tiempo);
+        c2.update(dif_tiempo);
+
+        c.draw(id_programa); 
         c2.draw(id_programa);
 
 
