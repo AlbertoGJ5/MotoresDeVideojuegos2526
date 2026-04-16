@@ -127,6 +127,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cubo.cpp" />
+    <ClCompile Include="ECS.cpp" />
+    <ClCompile Include="Octaedro.cpp" />
     <ClCompile Include="OpenGLMath.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

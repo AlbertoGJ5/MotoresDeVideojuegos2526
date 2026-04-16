@@ -11,6 +11,9 @@
 #include "stb_image.h"
 
 #include "Cubo.cpp"
+#include "Octaedro.cpp"
+
+#include "ECS.cpp"
 
 GLFWwindow* ventana;
 const unsigned int ANCHO_V = 1920, ALTO_V = 1080;
@@ -198,6 +201,13 @@ int main()
     float dif_tiempo = 0.0f;
     float ultimo_tiempo = 0.0f;
 
+    
+    Entidad e;
+    e.crearComponente<Cubo>();
+
+    std::cout << e.buscarComponente<Componente>();
+
+
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, ANCHO_V, ALTO_V);
@@ -259,10 +269,10 @@ int main()
 
 
         if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
-            c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
+            //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
         }
         else if (glfwGetKey(ventana, GLFW_KEY_E) == GLFW_PRESS) {
-            c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
+            //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
         }
   
      

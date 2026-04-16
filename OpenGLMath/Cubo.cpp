@@ -10,6 +10,7 @@
 #include "ext.hpp"
 
 
+
 struct ReporteColision {
     bool hayColision;
     float dist_penetr;
@@ -27,7 +28,7 @@ struct ReporteColision {
 };
 
 
-class Cubo {
+class Cubo{
 	float lado_cubo;
     glm::vec3 pos, pos_prev, giro, vel, fuerza;
     float masa;
