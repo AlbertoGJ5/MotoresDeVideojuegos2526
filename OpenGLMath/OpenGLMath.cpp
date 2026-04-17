@@ -202,11 +202,18 @@ int main()
     float ultimo_tiempo = 0.0f;
 
     
-    Entidad e;
+    Entidad e(0);
     e.crearComponente<Cubo>();
 
     std::cout << e.buscarComponente<Componente>();
 
+
+    std::map<uint32_t, Entidad*> entidades;
+    std::vector<Componente*> componentes;
+    for (auto it : entidades) {
+        Componente* posible_componente = it.second->buscarComponente<Componente>();
+        if (posible_componente) componentes.push_back(posible_componente);
+    }
 
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
