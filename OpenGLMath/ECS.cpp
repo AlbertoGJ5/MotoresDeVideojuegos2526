@@ -1,5 +1,5 @@
 
-#pragma
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -14,6 +14,7 @@ class GameObject {
 public:
 	GameObject() { tipo.id_tipo = 0; };
 	// destructor
+	virtual ~GameObject() = default; // polimorfico - puede tener destruccion como otro objeto
 
 	struct Tipo {
 		std::string nombre_tipo;
@@ -53,9 +54,11 @@ public:
 	Entidad(uint32_t id) : id(id) {}
 
 	// Crea componentes o sus subtipos
-	template<class T> T* crearComponente() {
-		T* nuevo_componente = new T();
-		componentes.push_back(nuevo_componente);
+	template<class T> Componente* crearComponente() {
+		Componente* nuevo_componente = dynamic_cast<Componente*> (new T());
+		if (nuevo_componente) {
+			componentes.push_back(nuevo_componente);
+		}
 		return nuevo_componente;
 	}
 
@@ -156,13 +159,7 @@ public:
 
 };
 
-Mundo* Mundo::instancia = 0;
-Mundo* Mundo::getInstance() {
-	if (!instancia) {
-		instancia = new Mundo();
-	}
-	return instancia;
-}
+
 
 
 
@@ -230,11 +227,4 @@ public:
 
 };
 
-GameLoop* GameLoop::instancia = 0;
-GameLoop* GameLoop::getInstance() {
-	if (!instancia) {
-		instancia = new GameLoop();
-	}
-	return instancia;
-}
 

@@ -1,5 +1,9 @@
 
+#pragma once
+
 #include <iostream>
+#include <vector>
+#include <map>
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -10,10 +14,49 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "ECS.cpp"
+#include "Event.cpp"
+
 #include "Cubo.cpp"
 #include "Octaedro.cpp"
 
-#include "ECS.cpp"
+class Character { public: virtual ~Character() = default; };
+class Goblin : public Character { public: void Enrage() {} };
+
+void Act(Character* enemy) {
+    if (Goblin* g = dynamic_cast<Goblin*>( new Character() )) {
+        g->Enrage();
+    }
+    else {
+        std::cout << "Not a Goblin\n";
+    }
+}
+
+
+
+void reset() {
+
+}
+
+class Callbacks {
+public:
+    static void resetCubo(GameObject* obj, Evento* evento) {
+        //GameObject* gm = dynamic_cast<GameObject*>(new Cubo()); // upcasting con dynamic_cast - de hijo a padre
+        //Cubo* gm = static_cast<Cubo*>(new GameObject()); // downcasting con static_cast - inseguro - de padre a hijo
+        //Cubo* c = dynamic_cast<Cubo*>( new GameObject() // downcasting con dynamic_cast - seguro pero GameObject tiene que tener
+        //                                                   >1 funciones virtuales - de padre a hijo
+
+        Cubo* c = dynamic_cast<Cubo*>( obj );
+        if (c) {
+            c->reset();
+        }
+        else {
+            std::cout << "Conversion incorrecta\n";
+        }
+        
+    }
+};
+
 
 GLFWwindow* ventana;
 const unsigned int ANCHO_V = 1920, ALTO_V = 1080;
@@ -182,8 +225,15 @@ int main()
     // liberar los datos
     stbi_image_free(datos_textura);
 
+    SistemaEventos* sist_eventos = new SistemaEventos();
+    Cubo c(1);
+    Cubo c2(1, { -2,0,0 });
 
-
+    // Preparacion -> nosotros al programar el juego
+    sist_eventos->suscribir<Error>( &c2, c2.f );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
+    
+    // Reaccion -> cuando ocurre un evento  <Error>
+    sist_eventos->publicar<Error>( new Error(0, "error de prueba") ); // Ha ocurrido un Evento Error -> avisar a todos los que reaccionan a ello
 
 
     float angulo_cubo = 0.0f;
@@ -193,8 +243,7 @@ int main()
     glm::vec3 frente_camara = glm::vec3({ 0, 0, -1 });
     glm::vec3 up_camara = glm::vec3({ 0, 1, 0 });
 
-    Cubo c(1);
-    Cubo c2(1, {-2,0,0} );
+    
 
     glEnable(GL_DEPTH_TEST);
 
@@ -203,7 +252,7 @@ int main()
 
     
     Entidad e(0);
-    e.crearComponente<Cubo>();
+    //e.crearComponente<Cubo>();
 
     std::cout << e.buscarComponente<Componente>();
 

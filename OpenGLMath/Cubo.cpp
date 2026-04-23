@@ -9,6 +9,8 @@
 #include "glm.hpp"
 #include "ext.hpp"
 
+#include "ECS.cpp"
+#include "Event.cpp"
 
 
 struct ReporteColision {
@@ -28,7 +30,7 @@ struct ReporteColision {
 };
 
 
-class Cubo{
+class Cubo : public GameObject {
 	float lado_cubo;
     glm::vec3 pos, pos_prev, giro, vel, fuerza;
     float masa;
@@ -36,10 +38,16 @@ class Cubo{
     unsigned int VAO;
 
 public: 
+    void reset() {
+        pos = glm::vec3( 0,0,0 );
+        //vel = { 0,0,0 };
+    }
+
 	Cubo() : lado_cubo(1), FLAG_CAMBIO_VERTICES(true), pos(0,0,0), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
 	Cubo(float lado) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(0, 0, 0), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
     Cubo(float lado, glm::vec3 pos) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(0, 0, 0), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
     Cubo(float lado, glm::vec3 pos, glm::vec3 giro) : lado_cubo(lado), FLAG_CAMBIO_VERTICES(true), pos(pos), VAO(0), giro(giro), vel(0, 0, 0), fuerza(0, 0, 0), masa(1) {};
+    virtual ~Cubo() = default;
 
     void setPos(glm::vec3 pos) {
         pos_prev = this->pos;
