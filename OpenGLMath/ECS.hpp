@@ -138,6 +138,8 @@ public:
 	// Crea sistemas o sus subtipos
 	template<class T> T* crearSistema(float tick_rate = 0);
 
+	void addSistema(Sistema* sistema, float tick_rate = 0);
+
 	// Encontrar sistema
 	template<class T>
 	T* buscarSistema();

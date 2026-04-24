@@ -123,6 +123,18 @@ template<class T> T* GameLoop::crearSistema(float tick_rate) {
 	return nuevo_sistema;
 }
 
+// Añadir sistemas
+void GameLoop::addSistema(Sistema* sistema, float tick_rate) {
+	sistema->inicializar();
+
+	SistemaRegistrado* sr = new SistemaRegistrado();
+	sr->sistema = sistema;
+	sr->tick_rate = (tick_rate == 0) ? 0 : 1.0f / tick_rate;
+	sr->ticker = 0;
+
+	sistemas.push_back(sr);
+}
+
 // Encontrar sistema
 template<class T> 
 T* GameLoop::buscarSistema() {

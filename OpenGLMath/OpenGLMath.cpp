@@ -16,6 +16,7 @@
 
 #include "ECS.hpp"
 #include "Event.cpp"
+#include "Input.cpp"
 
 #include "Cubo.cpp"
 #include "Octaedro.cpp"
@@ -38,11 +39,84 @@ public:
         }
         
     }
+
+
+    static void botonPulsado(GameObject* obj, Evento* evento) {
+
+        //Cubo* c = dynamic_cast<Cubo*>(obj);
+        EventoInput* evento_boton = dynamic_cast<EventoInput*>(evento);
+        std::string accion = evento_boton->accion;
+
+        if (evento_boton) {
+            if (accion == "saltar") {
+
+            }
+            else {
+
+            }
+        }
+        else {
+            std::cout << "Conversion incorrecta\n";
+        }
+
+    }
 };
 
 
 GLFWwindow* ventana;
 const unsigned int ANCHO_V = 1920, ALTO_V = 1080;
+
+float xi = ANCHO_V / 2;
+float yi = ALTO_V / 2;
+float yaw = -90.f, pitch = 0;
+
+float fov = 45.0f;
+
+bool primer_mov_camara = true;
+
+glm::vec3 pos_camara = glm::vec3({ 0.25, 0, 5 });
+glm::vec3 frente_camara = glm::vec3({ 0, 0, -1 });
+glm::vec3 up_camara = glm::vec3({ 0, 1, 0 });
+
+void funcionCallbackRaton(GLFWwindow* ventana, double x, double y) {
+
+    float xf = static_cast<float>(x);
+    float yf = static_cast<float>(y);
+
+    if (primer_mov_camara) {
+        xi = xf;
+        yi = yf;
+        primer_mov_camara = false;
+    }
+
+    float sensibilidad_raton = 0.05f;
+
+    float cambio_x = (xf - xi) * sensibilidad_raton;
+    float cambio_y = (yi - yf) * sensibilidad_raton;
+    xi = xf;
+    yi = yf;
+
+    // Evitar vueltas sobre si mismo
+    if (pitch > 89.f) {
+        pitch = 89.f;
+    }
+    if (pitch < -89.f) {
+        pitch = -89.f;
+    }
+
+    yaw += cambio_x;
+    pitch += cambio_y;
+
+    glm::vec3 direccion_mirada;
+    direccion_mirada.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direccion_mirada.y = sin(glm::radians(pitch));
+    direccion_mirada.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    frente_camara = glm::normalize(direccion_mirada);
+    glm::vec3 perp_plano_roll = glm::normalize(glm::cross(frente_camara, glm::vec3(0, 1, 0)));
+    up_camara = glm::normalize(glm::cross(perp_plano_roll ,frente_camara));
+}
+
 
 //using namespace glm;
 
@@ -63,7 +137,7 @@ int main()
 
     glewInit();
 
-    //glfwSetInputMode(ventana, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(ventana, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     std::string vertexShaderCodigo =
      "#version 330 core\n"
@@ -208,7 +282,14 @@ int main()
     // liberar los datos
     stbi_image_free(datos_textura);
 
+    GameLoop* loop = GameLoop::getInstance();
+
+    //SistemaEventos* sist_eventos = loop->crearSistema<SistemaEventos>();
     SistemaEventos* sist_eventos = new SistemaEventos();
+    loop->addSistema(sist_eventos);
+    SistemaInput* sist_inputs = new SistemaInput();
+    loop->addSistema(sist_inputs);
+
     Cubo c(1);
     Cubo c2(1, { -2,0,0 });
 
@@ -222,9 +303,7 @@ int main()
     float angulo_cubo = 0.0f;
     float angulo = 90.0f;
 
-    glm::vec3 pos_camara = glm::vec3({ 0.25, 0, 5 });
-    glm::vec3 frente_camara = glm::vec3({ 0, 0, -1 });
-    glm::vec3 up_camara = glm::vec3({ 0, 1, 0 });
+    
 
     
 
@@ -275,10 +354,11 @@ int main()
 
 
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            angulo += 0.5;
+            loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
+            pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            angulo -= 0.5;
+            pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
         }
 
         if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
@@ -306,16 +386,23 @@ int main()
         }
 
 
-        if (glfwGetKey(ventana, GLFW_KEY_Q) == GLFW_PRESS) {
+        if (glfwGetMouseButton(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
             //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
+            fov = 30.0f;
         }
-        else if (glfwGetKey(ventana, GLFW_KEY_E) == GLFW_PRESS) {
+        else if (glfwGetKey(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
+            fov = 45.0f;
         }
   
      
         int vista = glGetUniformLocation(id_programa, "vista");
-        frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
+        //frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
+
+
+        // Debo cambiar la pos/up/frente camara
+        glfwSetCursorPosCallback(ventana, funcionCallbackRaton); // lo que ocurre si cambia los pos del ratón
+ 
 
         glm::mat4 ident2 = glm::lookAt(
             pos_camara,
@@ -328,7 +415,7 @@ int main()
 
         int proy = glGetUniformLocation(id_programa, "proy");
         glm::mat4 ident3 = glm::perspective( // conica
-            glm::radians(45.0f),
+            glm::radians(fov),
             (float)ANCHO_V / ALTO_V,
             0.1f,
             100.0f

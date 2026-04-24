@@ -129,6 +129,7 @@
     <ClCompile Include="Cubo.cpp" />
     <ClCompile Include="ECS.cpp" />
     <ClCompile Include="Event.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Octaedro.cpp" />
     <ClCompile Include="OpenGLMath.cpp" />
   </ItemGroup>
