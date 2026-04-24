@@ -14,29 +14,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "ECS.cpp"
+#include "ECS.hpp"
 #include "Event.cpp"
 
 #include "Cubo.cpp"
 #include "Octaedro.cpp"
 
-class Character { public: virtual ~Character() = default; };
-class Goblin : public Character { public: void Enrage() {} };
-
-void Act(Character* enemy) {
-    if (Goblin* g = dynamic_cast<Goblin*>( new Character() )) {
-        g->Enrage();
-    }
-    else {
-        std::cout << "Not a Goblin\n";
-    }
-}
-
-
-
-void reset() {
-
-}
 
 class Callbacks {
 public:
@@ -230,7 +213,7 @@ int main()
     Cubo c2(1, { -2,0,0 });
 
     // Preparacion -> nosotros al programar el juego
-    sist_eventos->suscribir<Error>( &c2, c2.f );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
+    sist_eventos->suscribir<Error>( &c2, Callbacks::resetCubo );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
     
     // Reaccion -> cuando ocurre un evento  <Error>
     sist_eventos->publicar<Error>( new Error(0, "error de prueba") ); // Ha ocurrido un Evento Error -> avisar a todos los que reaccionan a ello
@@ -254,14 +237,13 @@ int main()
     Entidad e(0);
     //e.crearComponente<Cubo>();
 
-    std::cout << e.buscarComponente<Componente>();
 
 
     std::map<uint32_t, Entidad*> entidades;
     std::vector<Componente*> componentes;
     for (auto it : entidades) {
-        Componente* posible_componente = it.second->buscarComponente<Componente>();
-        if (posible_componente) componentes.push_back(posible_componente);
+        //Componente* posible_componente = dynamic_cast<Componente*>(it.second->buscarComponente<Componente>() );
+        //if (posible_componente) componentes.push_back(posible_componente);
     }
 
     do {

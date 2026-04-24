@@ -1,5 +1,7 @@
 
-#include "ECS.cpp"
+#pragma once
+
+#include "ECS.hpp"
 
 #include <vector>
 #include <typeindex>

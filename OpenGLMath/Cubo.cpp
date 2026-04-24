@@ -9,7 +9,7 @@
 #include "glm.hpp"
 #include "ext.hpp"
 
-#include "ECS.cpp"
+#include "ECS.hpp"
 #include "Event.cpp"
 
 
