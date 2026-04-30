@@ -120,6 +120,8 @@ protected:
 	GameLoop() {}
 
 	struct SistemaRegistrado {
+		virtual ~SistemaRegistrado() = default;
+
 		Sistema* sistema;
 		float tick_rate; // cada cuanto me actualizo
 		float ticker; // por cual voy
@@ -142,6 +144,12 @@ public:
 
 	// Encontrar sistema
 	template<class T>
-	T* buscarSistema();
+	T* buscarSistema() {
+		for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
+			T* obj = dynamic_cast<T*>(*it);
+			if (obj) return obj;
+		}
+		return 0;
+	}
 
 };

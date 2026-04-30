@@ -14,6 +14,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "ft2build.h"
+#include FT_FREETYPE_H  
+
 #include "ECS.hpp"
 #include "Event.cpp"
 #include "Input.cpp"
@@ -297,7 +300,7 @@ int main()
     sist_eventos->suscribir<Error>( &c2, Callbacks::resetCubo );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
     
     // Reaccion -> cuando ocurre un evento  <Error>
-    sist_eventos->publicar<Error>( new Error(0, "error de prueba") ); // Ha ocurrido un Evento Error -> avisar a todos los que reaccionan a ello
+    //sist_eventos->publicar<Error>( new Error(0, "error de prueba") ); // Ha ocurrido un Evento Error -> avisar a todos los que reaccionan a ello
 
 
     float angulo_cubo = 0.0f;
@@ -354,7 +357,7 @@ int main()
 
 
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
+            //loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
             pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
         }
         else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {

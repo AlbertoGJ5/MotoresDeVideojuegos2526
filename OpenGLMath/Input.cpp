@@ -33,6 +33,9 @@ protected:
 	// Mencion - se podria tener clases para raton, teclado y mando. En ese caso, habria que hacer otro mapa con relaciones entre esos dispositivos y los botones
 
 public:
+	SistemaInput() {
+		acciones = std::map<std::string, std::vector<Mapeo*>>();
+	}
 	virtual ~SistemaInput() = default;
 
 	void inicializar() override {
@@ -67,8 +70,12 @@ public:
 	void lanzarAccion(int boton) {
 		SistemaEventos* sistema_eventos = GameLoop::getInstance()->buscarSistema<SistemaEventos>();
 
+		std::cout << acciones.size();
+
 		for (auto it_map = acciones.begin(); it_map != acciones.end(); it_map++) {
+			std::cout << "it_map";
 			for (auto it_vec = it_map->second.begin(); it_vec != it_map->second.end(); it_vec++) {
+				std::cout << "it_vec";
 				if ((*it_vec)->boton == boton) {
 					// Esto está aquí suponiendo que la accion tiene un callback asociado
 					sistema_eventos->publicar(new EventoInput((*it_vec)->accion) ); 

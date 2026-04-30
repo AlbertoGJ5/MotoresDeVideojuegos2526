@@ -136,14 +136,14 @@ void GameLoop::addSistema(Sistema* sistema, float tick_rate) {
 }
 
 // Encontrar sistema
-template<class T> 
-T* GameLoop::buscarSistema() {
-	for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
-		T* obj = dynamic_cast<T*>(*it);
-		if (obj) return obj;
-	}
-	return 0;
-}
+//template<class T> 
+//T* GameLoop::buscarSistema() {
+//	for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
+//		T* obj = dynamic_cast<T*>(*it);
+//		if (obj) return obj;
+//	}
+//	return 0;
+//}
 
 GameLoop* GameLoop::instancia = 0;
 GameLoop* GameLoop::getInstance() {
