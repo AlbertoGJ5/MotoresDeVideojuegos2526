@@ -160,10 +160,10 @@ public:
 
              // CARA FRONTAL -> Z = lado_cubo
            //X              Y             Z
-             0,             0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 0,      // vertice 4
-             0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        0, 1,      // vertice 5
-             lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 1,      // vertice 6 
-             lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 0.0f,      0,      0,      1,        1, 0,      // vertice 7 
+             0,             0,            lado_cubo,    1.0f, 0.0f, 1.0f,      0,      0,      1,        0, 0,      // vertice 4
+             0,             lado_cubo,    lado_cubo,    1.0f, 0.0f, 1.0f,      0,      0,      1,        0, 1,      // vertice 5
+             lado_cubo,     lado_cubo,    lado_cubo,    1.0f, 0.0f, 1.0f,      0,      0,      1,        1, 1,      // vertice 6 
+             lado_cubo,     0,            lado_cubo,    1.0f, 0.0f, 1.0f,      0,      0,      1,        1, 0,      // vertice 7 
 
              // CARA IZQUIERDA -> X = 0
              0,             0,            0,            0.0f, 0.0f, 1.0f,      -1,     0,      0,        0, 0,      // vertice 8

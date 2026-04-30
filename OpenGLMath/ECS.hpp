@@ -30,15 +30,15 @@ class Entidad;
 class Sistema;
 
 
-// IMPORTANTE : clases genÈricas (no son abstractas, 
-// pero si que pretenden ser lo m·s genÈricas posible 
+// IMPORTANTE : clases gen√©ricas (no son abstractas, 
+// pero si que pretenden ser lo m√°s gen√©ricas posible 
 // para que pueda heredar la mayor cantidad de clases sin limitarme)
 
 class Componente : public GameObject {
 	// Objetivo: contener datos o propiedades
 public:
 	Componente() : entidad(0) {};
-	Entidad* entidad; // Lo unico que puede decir de un componente es que est· dentro de una entidad
+	Entidad* entidad; // Lo unico que puede decir de un componente es que est√° dentro de una entidad
 };
 
 
@@ -58,7 +58,7 @@ public:
 	// Busca si en los componentes hay un objeto de tipo T
 	template<class T> T* buscarComponente();
 
-	// AÒadir componentes existentes
+	// A√±adir componentes existentes
 	void addComponente(Componente* nuevo_componente);
 
 	// Eliminar componentes
@@ -98,7 +98,7 @@ public:
 	// Crea entidades o sus subtipos
 	Entidad* crearEntidad(uint32_t id = 0);
 
-	// AÒadir entidades existentes
+	// A√±adir entidades existentes
 	void addEntidad(Entidad* nueva_entidad);
 
 	// Busca si en los componentes hay un objeto de tipo T

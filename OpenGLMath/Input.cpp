@@ -26,10 +26,11 @@ protected:
 	struct Mapeo { // son botones, pero guardan tambien la accion para los callback y los eventos
 		std::string accion;
 		int boton;
-		// aparecería el dispositivo
+		// aparecerÃ­a el dispositivo
 	};
 
-	std::map<std::string, std::vector<Mapeo*>> acciones;
+	std::map<std::string, std::vector<Mapeo*>> acciones = { {"accion", std::vector<Mapeo*>()}};
+
 	// Mencion - se podria tener clases para raton, teclado y mando. En ese caso, habria que hacer otro mapa con relaciones entre esos dispositivos y los botones
 
 public:
@@ -77,7 +78,7 @@ public:
 			for (auto it_vec = it_map->second.begin(); it_vec != it_map->second.end(); it_vec++) {
 				std::cout << "it_vec";
 				if ((*it_vec)->boton == boton) {
-					// Esto está aquí suponiendo que la accion tiene un callback asociado
+					// Esto estÃ¡ aquÃ­ suponiendo que la accion tiene un callback asociado
 					sistema_eventos->publicar(new EventoInput((*it_vec)->accion) ); 
 				}
 			}
