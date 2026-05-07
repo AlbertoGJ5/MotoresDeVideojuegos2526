@@ -132,6 +132,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Octaedro.cpp" />
     <ClCompile Include="OpenGLMath.cpp" />
+    <ClCompile Include="SistemaTexto.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ECS.hpp" />

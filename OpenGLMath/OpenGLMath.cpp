@@ -14,15 +14,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H  
 
 #include "ECS.hpp"
 #include "Event.cpp"
 #include "Input.cpp"
+#include "SistemaTexto.cpp"
 
 #include "Cubo.cpp"
 #include "Octaedro.cpp"
+
 
 
 class Callbacks {
@@ -210,7 +210,7 @@ int main()
     "vec3 luz_final = luz_ambiente + luz_difusa + luz_especular;"
 
     "void main() {\n"
-    "   FragColor = vec4( 1.0, 1.0, 1.0, texture(datosTextura, coordsTextura) ) * vec4( colorVertice * luz_final, 1.0f); \n"
+    "   FragColor = vec4( 1.0, 1.0, 1.0, texture(datosTextura, coordsTextura).r ) * vec4( colorVertice * luz_final, 1.0f); \n"
     " }\0";
 
     // Vertex shader
@@ -287,75 +287,6 @@ int main()
 
 
 
-    // TEXTO
-    FT_Library libreria;
-    if (FT_Init_FreeType(&libreria)) {
-        std::cout << "No se ha podido inicializar FreeType\n";
-        return -1;
-    }
-
-    FT_Face font_face; // leer el archivo - guardar TODAS las letras
-    if (FT_New_Face(libreria, "font/arial.ttf", 0, &font_face)) {
-        std::cout << "No se ha podido leer la fuente\n";
-        return -1;
-    }
-
-
-    FT_Set_Pixel_Sizes(font_face, 0, 48);
-
-    
-
-    struct Glifo {
-        unsigned int texture_id;
-        glm::vec2 size; // anchura y altura
-        glm::vec2 bearing; 
-        unsigned int advance; // distancia al siguiente glifo
-    };
-
-    // provisional 
-    std::map<char, Glifo> glifos;
-
-    // guarda un bitmap de pixeles enteros (i)
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // deshabilitar el alineamiento
-
-    if (!FT_Load_Char(font_face, 85, FT_LOAD_RENDER)) { // cargo el bitmap
-        std::cout << "Se ha renderizado el glifo\n";
-
-        unsigned int texture_texto;
-        glGenTextures(1, &texture_texto);
-        glBindTexture(GL_TEXTURE_2D, texture_texto);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // no quiero repeticiones, sino expansión
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexImage2D(
-            GL_TEXTURE_2D, 
-            0, 
-            GL_RED, 
-            font_face->glyph->bitmap.width,
-            font_face->glyph->bitmap.rows,
-            0, 
-            GL_RED, 
-            GL_UNSIGNED_BYTE, 
-            font_face->glyph->bitmap.buffer
-        );
-
-        Glifo t = {
-            texture_texto,
-            glm::vec2(font_face->glyph->bitmap.width, font_face->glyph->bitmap.rows),
-            glm::vec2(font_face->glyph->bitmap_left, font_face->glyph->bitmap_top),
-            font_face->glyph->advance.x
-        };
-
-        glifos.insert({ 'T' , t });
-    }
-
-
-
-
     GameLoop* loop = GameLoop::getInstance();
 
     //SistemaEventos* sist_eventos = loop->crearSistema<SistemaEventos>();
@@ -363,9 +294,13 @@ int main()
     loop->addSistema(sist_eventos);
     SistemaInput* sist_inputs = new SistemaInput();
     loop->addSistema(sist_inputs);
+    SistemaTexto* sist_textos = new SistemaTexto();
+    sist_textos->inicializar();
+    loop->addSistema(sist_textos);
 
     Cubo c(1);
     Cubo c2(1, { -2,0,0 });
+    Cubo c3(1, { 0,-1,0 });
 
     // Preparacion -> nosotros al programar el juego
     sist_eventos->suscribir<Error>( &c2, Callbacks::resetCubo );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
@@ -535,10 +470,20 @@ int main()
         c.update(dif_tiempo);
         c2.update(dif_tiempo);
 
+
+        //glActiveTexture(GL_TEXTURE12);
+        glBindTexture(GL_TEXTURE_2D, texture_id_0);
         c.draw(id_programa); 
         c2.draw(id_programa);
 
 
+        //glBindTexture(GL_TEXTURE_2D, glifos['v'].texture_id);
+        c3.draw(id_programa);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        //text.draw();
+
+        sist_textos->renderText("HOLA");
+        glUseProgram(id_programa);
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();

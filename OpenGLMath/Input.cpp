@@ -29,13 +29,14 @@ protected:
 		// aparecería el dispositivo
 	};
 
-	std::map<std::string, std::vector<Mapeo*>> acciones = { {"accion", std::vector<Mapeo*>()}};
-
+	
+	std::map<std::string, std::vector<Mapeo*>> acciones;
 	// Mencion - se podria tener clases para raton, teclado y mando. En ese caso, habria que hacer otro mapa con relaciones entre esos dispositivos y los botones
 
 public:
 	SistemaInput() {
 		acciones = std::map<std::string, std::vector<Mapeo*>>();
+		acciones.empty();
 	}
 	virtual ~SistemaInput() = default;
 
@@ -71,6 +72,9 @@ public:
 	void lanzarAccion(int boton) {
 		SistemaEventos* sistema_eventos = GameLoop::getInstance()->buscarSistema<SistemaEventos>();
 
+		if (acciones.empty()) {
+			std::cout << "vacio";
+		}
 		std::cout << acciones.size();
 
 		for (auto it_map = acciones.begin(); it_map != acciones.end(); it_map++) {
