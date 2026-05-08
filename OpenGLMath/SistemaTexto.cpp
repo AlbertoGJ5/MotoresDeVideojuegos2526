@@ -89,12 +89,14 @@ public:
             "#version 330 core\n"
 
             "layout (location = 0) in vec2 posicion; \n"
-            //"in vec3 posicionVertice; \n"
+            "layout (location = 1) in vec2 texturaST; \n"
+            
+            "out vec2 coordsTextura; \n"
 
             "void main() {\n"
             "  gl_Position = vec4(posicion, 0.0f, 1.0f); \n"
 
-            //"  coordsTextura = texturaST; \n"
+            "  coordsTextura = texturaST; \n"
             " }\0";
 
         std::string fragmentShaderCodigo =
@@ -106,8 +108,10 @@ public:
             "uniform sampler2D datosTextura; \n"
 
             "void main() {\n"
-            "   FragColor = vec4( 1.0, 1.0, 1.0, texture(datosTextura, coordsTextura).r ); \n"
+            "   FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * vec4(1.0, 1.0, 1.0, texture(datosTextura, coordsTextura).r) ; \n"
             " }\0";
+        //texture(datosTextura, coordsTextura).r
+
 
         // Vertex shader
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -154,14 +158,10 @@ public:
 
 	}
 
-    void renderText(std::string texto) {
-
-        std::cout << "EMPIEZO\n";
+    void renderText(std::string texto, float x = 0, float y = 0, float escala = 1) {
 
         // DIBUJADO - POR TANTO - VAOs, BindTexture, ActiveTexture, Shader, Uniforms
         glUseProgram(shader_texto);
-
-        std::cout << "CARGO SHADER\n";
 
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
@@ -169,38 +169,49 @@ public:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        std::cout << "FOR\n";
+        x = x / 1920 * escala;
+        y = y / 1080 * escala;
 
         for (std::string::const_iterator c = texto.begin(); c != texto.end(); c++) {
+      
             Glifo glifo = glifos[*c];
 
             // PUNTO ABAJO IZQ
-            float pos_x = 0 + glifo.bearing.x;
-            float pos_y = 0 + glifo.bearing.y - glifo.size.y; 
+            float pos_x = x + (float)(glifo.bearing.x) / 1920 * escala;
+            float pos_y = y + (float)(glifo.bearing.y - glifo.size.y) / 1080 * escala;
+
+            std::cout << "BEARING  " << x << "\n";
 
             // PUNTO ARRIBA DCHA
-            float anchura = glifo.size.x;
-            float altura = glifo.size.y;
+            float anchura = (float)glifo.size.x / 1920 * escala;
+            float altura = (float)glifo.size.y / 1080 * escala;
 
             float vertices[] = {
-                pos_x,              pos_y + altura,   // ARR IZQ   
-                pos_x,              pos_y,            // ABJ IZQ
-                pos_x + anchura,    pos_y,            // ABJ DCHA
+                // pos X                 pos  Y      S    T
+                pos_x,              pos_y + altura,  0.0f, 0.0f,  // ARR IZQ   
+                pos_x,              pos_y,           0.0f, 1.0f,  // ABJ IZQ
+                pos_x + anchura,    pos_y,           1.0f, 1.0f,  // ABJ DCHA
 
-                pos_x,              pos_y + altura,   // ARR IZQ  
-                pos_x + anchura,    pos_y,            // ABJ DCHA
-                pos_x + anchura,    pos_y + altura,   // ARR DCHA
+                pos_x,              pos_y + altura,  0.0f, 0.0f,  // ARR IZQ  
+                pos_x + anchura,    pos_y,           1.0f, 1.0f,  // ABJ DCHA
+                pos_x + anchura,    pos_y + altura,  1.0f, 0.0f, // ARR DCHA
             };
 
             
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2, vertices, GL_DYNAMIC_DRAW);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0); // pos
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, vertices, GL_DYNAMIC_DRAW);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 4 * sizeof(float), (void*)0); // pos
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 4 * sizeof(float), (void*)(2 * sizeof(float))); // coordsTexture
 
             glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+
+            glBindTexture(GL_TEXTURE_2D, glifo.texture_id);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            std::cout << *c;
+            //std::cout << *c;
+
+            x += (float)(glifo.advance >> 6) / 1920 * escala;
         }
 
         glBindVertexArray(0);

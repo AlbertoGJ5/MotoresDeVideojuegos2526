@@ -210,7 +210,7 @@ int main()
     "vec3 luz_final = luz_ambiente + luz_difusa + luz_especular;"
 
     "void main() {\n"
-    "   FragColor = vec4( 1.0, 1.0, 1.0, texture(datosTextura, coordsTextura).r ) * vec4( colorVertice * luz_final, 1.0f); \n"
+    "   FragColor = texture(datosTextura, coordsTextura) * vec4( colorVertice * luz_final, 1.0f); \n"
     " }\0";
 
     // Vertex shader
@@ -336,154 +336,176 @@ int main()
         //if (posible_componente) componentes.push_back(posible_componente);
     }
 
+    bool pause = false;
+
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, ANCHO_V, ALTO_V);
         
-        // ILUMINACION
 
-        float ahora = glfwGetTime();
-        //std::cout << "ahora: " << ahora << "\n";
-        dif_tiempo = ahora - ultimo_tiempo;
-        //std::cout << "dif_tiempo: " << dif_tiempo << "\n";
-        ultimo_tiempo = ahora;
+        if (!pause) {
+            float ahora = glfwGetTime();
+            //std::cout << "ahora: " << ahora << "\n";
+            dif_tiempo = ahora - ultimo_tiempo;
+            //std::cout << "dif_tiempo: " << dif_tiempo << "\n";
+            ultimo_tiempo = ahora;
 
-        int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
-        glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
+            int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
+            glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
 
-        int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
-        glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
+            int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
+            glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
 
-        int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
-        glUniform1f(modificador_de_intensidadAmbiente, 0.2);
+            int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
+            glUniform1f(modificador_de_intensidadAmbiente, 0.2);
 
-        int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
-        glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
+            int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
+            glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
 
-        int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
-        glUniform1i(modificador_de_datosTextura, 0);
+            int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
+            glUniform1i(modificador_de_datosTextura, 0);
 
 
-        if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            //loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
-            pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
+            if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
+                //loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
+                pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+                pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
+            }
+
+
+
+            if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
+                pos_camara += frente_camara * 0.3f;
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_DOWN) == GLFW_PRESS) {
+                pos_camara -= frente_camara * 0.3f;
+            }
+
+            if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_PRESS) {
+                c2.setAcel(glm::vec3(2, 0, 0));
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_A) == GLFW_PRESS) {
+                c2.setAcel(glm::vec3(-2, 0, 0));
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
+                c2.setPos(c2.getPos() + glm::vec3(0, 0.1, 0));
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
+                c2.setPos(c2.getPos() + glm::vec3(0, -0.1, 0));
+            }
+            else if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_RELEASE || glfwGetKey(ventana, GLFW_KEY_A) == GLFW_RELEASE) {
+                c2.setAcel(glm::vec3(0, c2.getAcel().y, c2.getAcel().z));
+                c2.setVel(glm::vec3(0, c2.getVel().y, c2.getVel().z));
+            }
+
+
+            if (glfwGetMouseButton(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+                //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
+                fov = 30.0f;
+            }
+            else if (glfwGetKey(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+                //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
+                fov = 45.0f;
+            }
+
+
+            int vista = glGetUniformLocation(id_programa, "vista");
+            //frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
+
+
+            // Debo cambiar la pos/up/frente camara
+            glfwSetCursorPosCallback(ventana, funcionCallbackRaton); // lo que ocurre si cambia los pos del ratón
+
+
+            glm::mat4 ident2 = glm::lookAt(
+                pos_camara,
+                pos_camara + frente_camara,
+                up_camara
+            );
+            glUniformMatrix4fv(vista, 1, GL_FALSE, glm::value_ptr(ident2));
+
+
+
+            int proy = glGetUniformLocation(id_programa, "proy");
+            glm::mat4 ident3 = glm::perspective( // conica
+                glm::radians(fov),
+                (float)ANCHO_V / ALTO_V,
+                0.1f,
+                100.0f
+            );
+            //glm::mat4 ident3 = glm::ortho( // conico
+            //    -1.0f,
+            //    1.0f,
+            //    -1.0f,
+            //    1.0f,
+            //    0.1f,
+            //    100.0f
+            //);
+            glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
+
+
+            if (ReporteColision reporte = c2.colision(&c)) {
+                std::cout << "COLISION\n";
+
+                float pos_proy = glm::dot(c2.getPos(), reporte.eje_penetr);
+                float pos_prev_proy = glm::dot(c2.getPosPrev(), reporte.eje_penetr);
+                float dist = pos_proy - pos_prev_proy;
+                std::cout << "dir: " << dist << "\n";
+
+                float dir = (dist > 0) ? 1 : -1;
+                glm::vec3 mvt = reporte.eje_penetr * reporte.dist_penetr * dir;
+                std::cout << "eje:" << mvt.x << ", " << mvt.y << ", " << mvt.z << "\n";
+                c2.setPos(c2.getPos() - mvt);
+
+                //std::cout << "FUERZA:" << c2.getFuerza().x << ", " << c2.getFuerza().y << ", " << c2.getFuerza().z << "\n";
+
+                c2.setFuerza(c2.getFuerza() - (glm::dot(c2.getFuerza(), reporte.eje_penetr) * reporte.eje_penetr));
+                c2.setVel(c2.getVel() - (glm::dot(c2.getVel(), reporte.eje_penetr) * reporte.eje_penetr));
+
+
+                //std::cout << "EJE:" << reporte.eje_penetr.x << ", " << reporte.eje_penetr.y << ", " << reporte.eje_penetr.z << "\n";
+            }
+            else {
+                //std::cout << "NO COLISION\n";
+            }
+
+            c.update(dif_tiempo);
+            c2.update(dif_tiempo);
+
+
+            glBindTexture(GL_TEXTURE_2D, texture_id_0);
+            c.draw(id_programa);
+            c2.draw(id_programa);
+
+
+            //glBindTexture(GL_TEXTURE_2D, glifos['v'].texture_id);
+            c3.draw(id_programa);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+
+            // DEBERIA DETECTAR EL BOTON DONDE LOS BOTONES, CREAR UN EVENTO, Y RESOLVERLO AQUI
+            if (glfwGetKey(ventana, GLFW_KEY_ENTER) == GLFW_PRESS) {
+                sist_textos->renderText("TEST de texto #|@", 300, -100, 2);
+                glUseProgram(id_programa);
+
+                glfwSetInputMode(ventana, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+                pause = true;
+            }
         }
-        else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
-        }
-
-        if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
-            pos_camara += frente_camara * 0.3f;
-        }
-        else if (glfwGetKey(ventana, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            pos_camara -= frente_camara * 0.3f;
-        }
-
-        if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_PRESS) {
-            c2.setAcel(glm::vec3(2, 0, 0));
-        }
-        else if (glfwGetKey(ventana, GLFW_KEY_A) == GLFW_PRESS) {
-            c2.setAcel(glm::vec3(-2, 0, 0));
-        }
-        else if (glfwGetKey(ventana, GLFW_KEY_W) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(0, 0.1, 0));
-        }
-        else if (glfwGetKey(ventana, GLFW_KEY_S) == GLFW_PRESS) {
-            c2.setPos(c2.getPos() + glm::vec3(0, -0.1, 0));
-        } 
-        else if (glfwGetKey(ventana, GLFW_KEY_D) == GLFW_RELEASE || glfwGetKey(ventana, GLFW_KEY_A) == GLFW_RELEASE) {
-            c2.setAcel(glm::vec3(0, c2.getAcel().y, c2.getAcel().z));
-            c2.setVel(glm::vec3(0, c2.getVel().y, c2.getVel().z));
-        }
-
-
-        if (glfwGetMouseButton(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-            //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
-            fov = 30.0f;
-        }
-        else if (glfwGetKey(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-            //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
-            fov = 45.0f;
-        }
-  
-     
-        int vista = glGetUniformLocation(id_programa, "vista");
-        //frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
-
-
-        // Debo cambiar la pos/up/frente camara
-        glfwSetCursorPosCallback(ventana, funcionCallbackRaton); // lo que ocurre si cambia los pos del ratón
- 
-
-        glm::mat4 ident2 = glm::lookAt(
-            pos_camara,
-            pos_camara + frente_camara,
-            up_camara
-        );
-        glUniformMatrix4fv(vista, 1, GL_FALSE, glm::value_ptr(ident2));
         
-
-
-        int proy = glGetUniformLocation(id_programa, "proy");
-        glm::mat4 ident3 = glm::perspective( // conica
-            glm::radians(fov),
-            (float)ANCHO_V / ALTO_V,
-            0.1f,
-            100.0f
-        );
-        //glm::mat4 ident3 = glm::ortho( // conico
-        //    -1.0f,
-        //    1.0f,
-        //    -1.0f,
-        //    1.0f,
-        //    0.1f,
-        //    100.0f
-        //);
-        glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
-
-        
-        if (ReporteColision reporte = c2.colision(&c)) {
-            std::cout << "COLISION\n";
-
-            float pos_proy = glm::dot(c2.getPos(), reporte.eje_penetr);
-            float pos_prev_proy = glm::dot(c2.getPosPrev(), reporte.eje_penetr);
-            float dist = pos_proy - pos_prev_proy;
-            std::cout << "dir: " << dist << "\n";
-
-            float dir = (dist > 0) ? 1 : -1;
-            glm::vec3 mvt = reporte.eje_penetr * reporte.dist_penetr * dir;
-            std::cout << "eje:" << mvt.x << ", " << mvt.y << ", " << mvt.z << "\n";
-            c2.setPos(c2.getPos() - mvt);
-
-            //std::cout << "FUERZA:" << c2.getFuerza().x << ", " << c2.getFuerza().y << ", " << c2.getFuerza().z << "\n";
-
-            c2.setFuerza(c2.getFuerza() - (glm::dot(c2.getFuerza(), reporte.eje_penetr) * reporte.eje_penetr) );
-            c2.setVel(c2.getVel() - (glm::dot(c2.getVel(), reporte.eje_penetr) * reporte.eje_penetr));
-
-
-            //std::cout << "EJE:" << reporte.eje_penetr.x << ", " << reporte.eje_penetr.y << ", " << reporte.eje_penetr.z << "\n";
-        }
         else {
-            //std::cout << "NO COLISION\n";
+
+            sist_textos->renderText("TEST de texto #|@", 300, -100, 2);
+            glUseProgram(id_programa);
+
+
+            if (glfwGetKey(ventana, GLFW_KEY_ENTER) == GLFW_RELEASE) {
+                glfwSetInputMode(ventana, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                pause = false;
+            }
         }
-
-        c.update(dif_tiempo);
-        c2.update(dif_tiempo);
-
-
-        //glActiveTexture(GL_TEXTURE12);
-        glBindTexture(GL_TEXTURE_2D, texture_id_0);
-        c.draw(id_programa); 
-        c2.draw(id_programa);
-
-
-        //glBindTexture(GL_TEXTURE_2D, glifos['v'].texture_id);
-        c3.draw(id_programa);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        //text.draw();
-
-        sist_textos->renderText("HOLA");
-        glUseProgram(id_programa);
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();
