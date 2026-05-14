@@ -367,11 +367,15 @@ int main()
 
 
             if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
-                //loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
-                pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
+                loop->buscarSistema<SistemaInput>()->lanzarAccion(GLFW_KEY_LEFT); // se ha pulsado el boton LEFT
+
+                
+                //Entidad* a = new Entidad();
+                //a->buscarComponente<Componente>();
+                //pos_camara -= glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
             }
             else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-                pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
+                //pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
             }
 
 

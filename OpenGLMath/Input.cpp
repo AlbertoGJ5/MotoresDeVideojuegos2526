@@ -72,11 +72,6 @@ public:
 	void lanzarAccion(int boton) {
 		SistemaEventos* sistema_eventos = GameLoop::getInstance()->buscarSistema<SistemaEventos>();
 
-		if (acciones.empty()) {
-			std::cout << "vacio";
-		}
-		std::cout << acciones.size();
-
 		for (auto it_map = acciones.begin(); it_map != acciones.end(); it_map++) {
 			std::cout << "it_map";
 			for (auto it_vec = it_map->second.begin(); it_vec != it_map->second.end(); it_vec++) {

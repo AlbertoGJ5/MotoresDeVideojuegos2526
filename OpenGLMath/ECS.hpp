@@ -50,7 +50,7 @@ protected:
 
 public:
 	uint32_t id;
-	Entidad(uint32_t id) : id(id) {}
+	Entidad(uint32_t id = 0) : id(id) {}
 
 	// Crea componentes o sus subtipos
 	template<class T> Componente* crearComponente();
@@ -144,12 +144,17 @@ public:
 
 	// Encontrar sistema
 	template<class T>
-	T* buscarSistema() {
-		for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
-			T* obj = dynamic_cast<T*>(*it);
-			if (obj) return obj;
-		}
-		return 0;
-	}
+	T* buscarSistema();
 
 };
+
+
+// Encontrar sistema
+template<class T>
+T* GameLoop::buscarSistema() {
+	for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
+		T* obj = dynamic_cast<T*>((*it)->sistema);
+		if (obj) return obj;
+	}
+	return 0;
+}

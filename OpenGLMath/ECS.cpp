@@ -1,9 +1,6 @@
 
-#pragma once
-
 
 #include "ECS.hpp"
-
 
 
 // Crea componentes o sus subtipos
@@ -119,7 +116,6 @@ template<class T> T* GameLoop::crearSistema(float tick_rate) {
 	sr->tick_rate = (tick_rate == 0) ? 0 : 1.0f / tick_rate;
 	sr->ticker = 0;
 
-	sistemas.push_back(sr);
 	return nuevo_sistema;
 }
 
@@ -131,19 +127,10 @@ void GameLoop::addSistema(Sistema* sistema, float tick_rate) {
 	sr->sistema = sistema;
 	sr->tick_rate = (tick_rate == 0) ? 0 : 1.0f / tick_rate;
 	sr->ticker = 0;
+	std::cout << sr;
 
 	sistemas.push_back(sr);
 }
-
-// Encontrar sistema
-//template<class T> 
-//T* GameLoop::buscarSistema() {
-//	for (auto it = sistemas.begin(); it < sistemas.end(); it++) {
-//		T* obj = dynamic_cast<T*>(*it);
-//		if (obj) return obj;
-//	}
-//	return 0;
-//}
 
 GameLoop* GameLoop::instancia = 0;
 GameLoop* GameLoop::getInstance() {
