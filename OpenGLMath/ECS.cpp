@@ -127,7 +127,6 @@ void GameLoop::addSistema(Sistema* sistema, float tick_rate) {
 	sr->sistema = sistema;
 	sr->tick_rate = (tick_rate == 0) ? 0 : 1.0f / tick_rate;
 	sr->ticker = 0;
-	std::cout << sr;
 
 	sistemas.push_back(sr);
 }

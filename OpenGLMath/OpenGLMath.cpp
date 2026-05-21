@@ -269,6 +269,84 @@ int main()
 
 
 
+
+
+
+
+    std::string vertexShaderFBCodigo = // DIBUJAR 2d sobre la propia pantalla
+        "#version 330 core\n"
+
+        "layout (location = 0) in vec2 posicion; \n"
+        "layout (location = 1) in vec2 texturaST; \n"
+
+        "out vec2 coordsTextura; \n"
+
+        "void main() {\n"
+        "  gl_Position = vec4(posicion.x, posicion.y, 0.0f, 1.0f); \n"
+        "  coordsTextura = texturaST; \n"
+        "}\0";
+
+    std::string fragmentShaderFBCodigo =
+        "#version 330 core\n"
+
+        "out vec4 FragColor; \n"
+
+        "in vec2 coordsTextura; \n"
+        "uniform sampler2D datosTextura; \n"
+
+        "void main() {\n"
+        "   FragColor = texture(datosTextura, coordsTextura); \n"
+        " }\0";
+
+    // Vertex shader
+    int vertexShaderFB = glCreateShader(GL_VERTEX_SHADER);
+    const char* temporal_vsfb = vertexShaderFBCodigo.c_str();
+    glShaderSource(vertexShaderFB, 1, &temporal_vsfb, NULL);
+    glCompileShader(vertexShaderFB);
+
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &exito);
+    if (exito) {
+        std::cout << "Se ha compilado el Vertex Shader del Frame Buffer\n";
+    }
+    else {
+        std::cout << "Ha fallado el Vertex Shader del Frame Buffer\n";
+    }
+
+    // fragment shader
+    int fragmentShaderFB = glCreateShader(GL_FRAGMENT_SHADER);
+    const char* temporal_fsfb = fragmentShaderFBCodigo.c_str();
+    glShaderSource(fragmentShaderFB, 1, &temporal_fsfb, NULL);
+    glCompileShader(fragmentShaderFB);
+
+    glGetShaderiv(fragmentShaderFB, GL_COMPILE_STATUS, &exito);
+    if (exito) {
+        std::cout << "Se ha compilado el Fragment Shader del Frame Buffer\n";
+    }
+    else {
+        std::cout << "Ha fallado el Fragment Shader del Frame Buffer\n";
+    }
+
+    unsigned int id_programa_fb = glCreateProgram();
+    glAttachShader(id_programa_fb, vertexShaderFB);
+    glAttachShader(id_programa_fb, fragmentShaderFB);
+    glLinkProgram(id_programa_fb);
+
+    glUseProgram(id_programa_fb);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // TEXTURAS
 
     int ancho_textura, alto_textura, numero_canales;
@@ -333,50 +411,141 @@ int main()
     
 
     // DEPTH TESTS
-
-    unsigned int FBO;
-    glGenFramebuffers(1, &FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    //unsigned int FBO;
+    //glGenFramebuffers(1, &FBO);
+    //glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     
     unsigned int calidad_sombras = 1024;
 
     unsigned int mapa_profundidad;
     glGenTextures(1, &mapa_profundidad);
     glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, calidad_sombras, calidad_sombras, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+   
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, calidad_sombras, calidad_sombras, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mapa_profundidad, 0);
+    //glDrawBuffer(GL_NONE);
+    //glReadBuffer(GL_NONE);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // 1. Comprobar la profundidad
+    glViewport(0, 0, calidad_sombras, calidad_sombras);
+    //glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    // 1.1 Dibujar
+    glClear(GL_DEPTH_BUFFER_BIT);
+    // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
+    // activar shader, matrices de transformacion, uniformes sin sombras
+    // draw();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // 2. Dibujar la escena como una textura de sombras
+    glViewport(0, 0, ANCHO_V, ALTO_V);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
+    // activar shader, matrices de transformacion, uniformes
+    glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
+    // draw();
+
+
+
+
+
+
+
+    // FRAME BUFFER que lee y escribe
+    unsigned int FBO;
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO); //lee y escribe
+
+
+    // Generar textura para el framebuffer
+    unsigned int textura_fb;
+    glGenTextures(1, &textura_fb);
+    glBindTexture(GL_TEXTURE_2D, textura_fb);
+
+    // Generar imagen de la textura, de momento vacía
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ANCHO_V, ALTO_V, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mapa_profundidad, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textura_fb, 0);
+
+    // FRAME BUFFER que solo escribe y está optimizado para ello
+    unsigned int RBO;
+    glGenRenderbuffers(1, &RBO);
+    glBindFramebuffer(GL_RENDERBUFFER, RBO); // equivalente a los VBOs dibujado
+
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, ANCHO_V, ALTO_V); // equivalente a dar el tamaño del buffer 
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO); // conectandolos entre si
+
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Frame buffer completo\n";
+    }
+    else {
+        std::cout << "Frame buffer incompleto\n";
+    }
+
+    // IMPORTANTE - DESBINDEAR
+    glBindFramebuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // VAO de la pantalla - Para dibujar con el shader de fb - Paso 1
+    unsigned int VAO_FB;
+    glGenVertexArrays(1, &VAO_FB);
+    glBindVertexArray(VAO_FB);
+    unsigned int VBO_FB;
+    glGenBuffers(1, &VBO_FB);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_FB);
+
+    float vertices_fb[] = {
+       // X   Y    S, T 
+         -1,  1,   0, 1,      // vertice 0  
+         -1, -1,   0, 0,      // vertice 1
+          1, -1,   1, 0,      // vertice 2 
+
+         -1,  1,   0, 1,      // vertice 4
+          1, -1,   1, 0,      // vertice 5
+          1,  1,   1, 1,      // vertice 6 
+    };
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 6, vertices_fb, GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); // pos
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); // color
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
 
 
-    // 1. Comprobar la profundidad
-    glViewport(0, 0, calidad_sombras, calidad_sombras);
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-        // 1.1 Dibujar
-        glClear(GL_DEPTH_BUFFER_BIT);
-        // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
-        // activar shader, matrices de transformacion, uniformes sin sombras
-        // draw();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // 2. Dibujar la escena como una textura de sombras
-    glViewport(0, 0, ANCHO_V, ALTO_V);
-         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
-         // activar shader, matrices de transformacion, uniformes
-         glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
-         // draw();
 
 
-    glEnable(GL_DEPTH_TEST);
+    // Para usar el frambuffer nuevo hay que:
+    // 1. Renderizar todo con el nuevo Framebuffer - es de lectura y escritura - quiero poder leer los datos de la escena
+    // 2. Bindear al framebuffer por defecto - 0 
+    // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
+    //     3.1. Va a requerir un dibujo sobre la pantalla - shader que dibuje la pantalla (porque es un textura)
+    //     3.2. Dibujar un plano semitransparente en el viewport
+
+
+
+
+
+
+
+
+    
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
 
@@ -391,7 +560,6 @@ int main()
     //e.crearComponente<Cubo>();
 
 
-
     std::map<uint32_t, Entidad*> entidades;
     std::vector<Componente*> componentes;
     for (auto it : entidades) {
@@ -401,29 +569,15 @@ int main()
 
 
     do {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, ANCHO_V, ALTO_V);
-        
+ 
         float ahora = glfwGetTime();
         //std::cout << "ahora: " << ahora << "\n";
         dif_tiempo = ahora - ultimo_tiempo;
         //std::cout << "dif_tiempo: " << dif_tiempo << "\n";
         ultimo_tiempo = ahora;
 
-        int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
-        glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
 
-        int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
-        glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
 
-        int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
-        glUniform1f(modificador_de_intensidadAmbiente, 0.2);
-
-        int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
-        glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
-
-        int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
-        glUniform1i(modificador_de_datosTextura, 0);
 
 
         if (glfwGetKey(ventana, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -433,8 +587,6 @@ int main()
         else if (glfwGetKey(ventana, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             pos_camara += glm::normalize(glm::cross(frente_camara, up_camara)) * 0.3f;
         }
-
-
 
         if (glfwGetKey(ventana, GLFW_KEY_UP) == GLFW_PRESS) {
             pos_camara += frente_camara * 0.3f;
@@ -460,7 +612,6 @@ int main()
             c2.setVel(glm::vec3(0, c2.getVel().y, c2.getVel().z));
         }
 
-
         if (glfwGetMouseButton(ventana, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
             //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, 0.5));
             fov = 30.0f;
@@ -469,24 +620,57 @@ int main()
             //c2.setGiro(c2.getGiro() + glm::vec3(0, 0, -0.5));
             fov = 45.0f;
         }
-
-
-        int vista = glGetUniformLocation(id_programa, "vista");
-        //frente_camara = glm::vec3(glm::cos(glm::radians(angulo)), 0, -glm::sin(glm::radians(angulo)));
-
-
         // Debo cambiar la pos/up/frente camara
         glfwSetCursorPosCallback(ventana, funcionCallbackRaton); // lo que ocurre si cambia los pos del ratón
 
 
+
+
+        // Para usar el frambuffer nuevo hay que:
+        // 1. Renderizar todo con el nuevo Framebuffer - es de lectura y escritura - quiero poder leer los datos de la escena
+        // 2. Bindear al framebuffer por defecto - 0 
+        // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
+        //     3.1. Va a requerir un dibujo sobre la pantalla - shader que dibuje la pantalla (porque es un textura)
+        //     3.2. Dibujar un plano semitransparente en el viewport
+
+
+        glViewport(0, 0, ANCHO_V, ALTO_V); // Independiente al FRAME BUFFER
+
+        // 1. PRIMER PASADA
+        // con el nuevo Framebuffer 
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO); // BUFFER POST
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // BUFFER POST - PIXELES - FRAMEBUFFER
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // DIBUJADO - FONDO - Relacionado con el renderizado
+        glEnable(GL_DEPTH_TEST); // BUFFER POST - DPETH - FRAMEBUFFER
+
+        // renderizar todo
+   
+
+        /// RENDERIZADO NORMAL - START
+        glUseProgram(id_programa); // shader normal
+
+        int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
+        glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
+
+        int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
+        glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
+
+        int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
+        glUniform1f(modificador_de_intensidadAmbiente, 0.2);
+
+        int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
+        glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
+
+        int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
+        glUniform1i(modificador_de_datosTextura, 0);
+
+        int vista = glGetUniformLocation(id_programa, "vista");
         glm::mat4 ident2 = glm::lookAt(
             pos_camara,
             pos_camara + frente_camara,
             up_camara
         );
         glUniformMatrix4fv(vista, 1, GL_FALSE, glm::value_ptr(ident2));
-
-
 
         int proy = glGetUniformLocation(id_programa, "proy");
         glm::mat4 ident3 = glm::perspective( // conica
@@ -495,60 +679,57 @@ int main()
             0.1f,
             100.0f
         );
-
-        //glm::mat4 ident3 = glm::ortho( // conico
-        //    -1.0f,
-        //    1.0f,
-        //    -1.0f,
-        //    1.0f,
-        //    0.1f,
-        //    100.0f
-        //);
         glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
 
 
         if (ReporteColision reporte = c2.colision(&c)) {
-            std::cout << "COLISION\n";
-
             float pos_proy = glm::dot(c2.getPos(), reporte.eje_penetr);
             float pos_prev_proy = glm::dot(c2.getPosPrev(), reporte.eje_penetr);
             float dist = pos_proy - pos_prev_proy;
-            std::cout << "dir: " << dist << "\n";
 
             float dir = (dist > 0) ? 1 : -1;
             glm::vec3 mvt = reporte.eje_penetr * reporte.dist_penetr * dir;
-            std::cout << "eje:" << mvt.x << ", " << mvt.y << ", " << mvt.z << "\n";
             c2.setPos(c2.getPos() - mvt);
-
-            //std::cout << "FUERZA:" << c2.getFuerza().x << ", " << c2.getFuerza().y << ", " << c2.getFuerza().z << "\n";
 
             c2.setFuerza(c2.getFuerza() - (glm::dot(c2.getFuerza(), reporte.eje_penetr) * reporte.eje_penetr));
             c2.setVel(c2.getVel() - (glm::dot(c2.getVel(), reporte.eje_penetr) * reporte.eje_penetr));
-
-
-            //std::cout << "EJE:" << reporte.eje_penetr.x << ", " << reporte.eje_penetr.y << ", " << reporte.eje_penetr.z << "\n";
-        }
-        else {
-            //std::cout << "NO COLISION\n";
         }
 
         c.update(dif_tiempo);
         c2.update(dif_tiempo);
 
-
         glBindTexture(GL_TEXTURE_2D, texture_id_0);
         c.draw(id_programa);
         c2.draw(id_programa);
-
-
-        //glBindTexture(GL_TEXTURE_2D, glifos['v'].texture_id);
         c3.draw(id_programa);
-        glBindTexture(GL_TEXTURE_2D, 0);
 
-
-        sist_textos->renderText( mouse_pos_string , 300, -100, 2);
+        sist_textos->renderText("aT", 300, -100, 2);
         glUseProgram(id_programa);
+        /// RENDERIZADO NORMAL - END
 
+        // EN EL FRAME BUFFER DE POST SE HA GUARDADO LA ESCENA ENTERA EN SUS BUFFERS. MIENTRAS QUE NO HAGAMOS CLEAR SIGUEN AHI
+
+
+        // 2. Bindear al framebuffer por defecto - 0 
+        // NOTA:  LA ESCENA ENTERA SIGUE AHI
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT); // BUFFER - PIXELES - FRAMEBUFFER
+     
+        // PASAR ESA ESCENA AL FRAME BUFFER NORMAL - con una textura
+        // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
+        glUseProgram(id_programa_fb); // shader normal
+        /// RENDERIZADO PANTALLA 2D - START
+
+        // uniformes
+
+        // dibujar sin EBO
+        glBindVertexArray(VAO_FB);
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, textura_fb);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+        /// RENDERIZADO PANTALLA 2D - END
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();

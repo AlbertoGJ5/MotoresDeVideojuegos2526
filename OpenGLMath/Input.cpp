@@ -73,9 +73,7 @@ public:
 		SistemaEventos* sistema_eventos = GameLoop::getInstance()->buscarSistema<SistemaEventos>();
 
 		for (auto it_map = acciones.begin(); it_map != acciones.end(); it_map++) {
-			std::cout << "it_map";
 			for (auto it_vec = it_map->second.begin(); it_vec != it_map->second.end(); it_vec++) {
-				std::cout << "it_vec";
 				if ((*it_vec)->boton == boton) {
 					// Esto está aquí suponiendo que la accion tiene un callback asociado
 					sistema_eventos->publicar(new EventoInput((*it_vec)->accion) ); 

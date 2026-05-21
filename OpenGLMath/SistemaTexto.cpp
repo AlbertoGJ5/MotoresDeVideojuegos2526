@@ -46,8 +46,6 @@ public:
 
         for (unsigned char c = 0; c <= 126; c++) {
             if (!FT_Load_Char(font_face, c, FT_LOAD_RENDER)) { // cargo el bitmap
-                std::cout << "Se ha renderizado el glifo\n";
-
                 unsigned int texture_texto;
                 glGenTextures(1, &texture_texto);
                 glBindTexture(GL_TEXTURE_2D, texture_texto);
@@ -180,8 +178,6 @@ public:
             float pos_x = x + (float)(glifo.bearing.x) / 1920 * escala;
             float pos_y = y + (float)(glifo.bearing.y - glifo.size.y) / 1080 * escala;
 
-            std::cout << "BEARING  " << x << "\n";
-
             // PUNTO ARRIBA DCHA
             float anchura = (float)glifo.size.x / 1920 * escala;
             float altura = (float)glifo.size.y / 1080 * escala;
@@ -208,8 +204,6 @@ public:
             glBindTexture(GL_TEXTURE_2D, glifo.texture_id);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
-
-            //std::cout << *c;
 
             x += (float)(glifo.advance >> 6) / 1920 * escala;
         }
