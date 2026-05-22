@@ -36,10 +36,21 @@
     <ClCompile Include="SistemaTexto.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ECS.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vertex_normal.shader" />
+    <None Include="fragment_normal.shader" />
+    <None Include="vertex_post.shader" />
+    <None Include="fragment_post.shader" />
+    <None Include="fragment_profundidad_luz.shader" />
+    <None Include="vertex_profundidad_luz.shader" />
   </ItemGroup>
 </Project>

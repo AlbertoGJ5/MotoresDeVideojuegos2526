@@ -21,6 +21,7 @@
 #include "Input.cpp"
 #include "SistemaTexto.cpp"
 
+#include "Shader.cpp"
 #include "Cubo.cpp"
 #include "Octaedro.cpp"
 
@@ -159,179 +160,16 @@ int main()
 
     glfwSetInputMode(ventana, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    std::string vertexShaderCodigo =
-     "#version 330 core\n"
-
-     "layout (location = 0) in vec3 posicion; \n"
-     "layout (location = 1) in vec3 colorDatos; \n"
-     "layout (location = 2) in vec3 normalDatos; \n"
-     "layout (location = 3) in vec2 texturaST; \n"
-
-     "out vec3 posicionVertice; \n"
-     "out vec3 colorVertice; \n"
-     "out vec3 normalVertice; \n"
-
-     "out vec2 coordsTextura; \n"
-
-     "uniform mat4 modelo; \n"
-     "uniform mat4 vista; \n"
-     "uniform mat4 proy; \n"
-
-     // Nota: tener cuidado con la matriz modelo vs normal
-
-     "void main() {\n"
-     "  gl_Position = proy * vista * modelo * vec4(posicion, 1.0f); \n"
-
-     "  posicionVertice = (modelo * vec4(posicion, 1.0f)).xyz; \n"
-     "  colorVertice = colorDatos; \n"
-     "  normalVertice = mat3(transpose(inverse(modelo))) * normalDatos; \n"
-
-     "  coordsTextura = texturaST; \n" 
-     " }\0";
-
-    std::string fragmentShaderCodigo =
-    "#version 330 core\n"
-
-    "out vec4 FragColor; \n"
-    
-    "uniform vec3 colorDesdeMain; \n"
-
-    "in vec3 posicionVertice; \n"
-    "in vec3 colorVertice; \n"
-    "in vec3 normalVertice; \n"
-
-    "in vec2 coordsTextura; \n"
-    "uniform sampler2D datosTextura; \n"
-
-    "uniform vec3 posLuz; \n"
-    "uniform vec3 colorLuz; \n"
-    "uniform float intensidadAmbiente; \n" // % de luz
-    "uniform vec3 posCamara; \n"
-
-    // Calc luz ambiente
-    "vec3 luz_ambiente = colorLuz * intensidadAmbiente; \n"
-
-    // Calc luz difusa
-    "vec3 dir_luz = normalize(posLuz - posicionVertice); \n"
-    "vec3 normalUnitaria = normalize(normalVertice); \n"
-    "float intensidadDifusa = max(dot(dir_luz, normalUnitaria), 0.0f); \n"
-    "vec3 luz_difusa = colorLuz * intensidadDifusa * (1.0f - intensidadAmbiente ); \n"
-
-    // Calc luz especular
-    "vec3 dir_camara = normalize(posCamara - posicionVertice); \n"
-    "vec3 dir_reflejada = reflect(-dir_luz, normalVertice); \n"
-    "float fuerzaEspecular = 1.0f;"
-    "float intensidadEspecular = pow( max(dot(dir_camara, dir_reflejada), 0.0f), 32); \n"
-    "vec3 luz_especular = colorLuz * intensidadEspecular * fuerzaEspecular; \n"
-
-    "vec3 luz_final = luz_ambiente + luz_difusa + luz_especular;"
-
-    "void main() {\n"
-    "   FragColor = texture(datosTextura, coordsTextura) * vec4( colorVertice * luz_final, 1.0f); \n"
-    " }\0";
-
-    // Vertex shader
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    const char* temporal_vs = vertexShaderCodigo.c_str();
-    glShaderSource(vertexShader, 1, &temporal_vs, NULL);
-    glCompileShader(vertexShader);
-
-    int exito;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &exito);
-    if (exito) {
-        std::cout << "Se ha compilado el Vertex Shader\n";
-    }
-    else {
-        std::cout << "Ha fallado el Vertex Shader\n";
-    }
-
-    // fragment shader
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const char* temporal_fs = fragmentShaderCodigo.c_str();
-    glShaderSource(fragmentShader, 1, &temporal_fs, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &exito);
-    if (exito) {
-        std::cout << "Se ha compilado el Fragment Shader\n";
-    }
-    else {
-        std::cout << "Ha fallado el Fragment Shader\n";
-    }
-
-    unsigned int id_programa = glCreateProgram();
-    glAttachShader(id_programa, vertexShader);
-    glAttachShader(id_programa, fragmentShader);
-    glLinkProgram(id_programa);
-
-    glUseProgram(id_programa);
+    Shader normal("vertex_normal.shader", "fragment_normal.shader");
+    normal.use();
+    unsigned int id_programa = normal.getId();
 
 
 
 
 
-
-
-
-    std::string vertexShaderFBCodigo = // DIBUJAR 2d sobre la propia pantalla
-        "#version 330 core\n"
-
-        "layout (location = 0) in vec2 posicion; \n"
-        "layout (location = 1) in vec2 texturaST; \n"
-
-        "out vec2 coordsTextura; \n"
-
-        "void main() {\n"
-        "  gl_Position = vec4(posicion.x, posicion.y, 0.0f, 1.0f); \n"
-        "  coordsTextura = texturaST; \n"
-        "}\0";
-
-    std::string fragmentShaderFBCodigo =
-        "#version 330 core\n"
-
-        "out vec4 FragColor; \n"
-
-        "in vec2 coordsTextura; \n"
-        "uniform sampler2D datosTextura; \n"
-
-        "void main() {\n"
-        "   FragColor = texture(datosTextura, coordsTextura); \n"
-        " }\0";
-
-    // Vertex shader
-    int vertexShaderFB = glCreateShader(GL_VERTEX_SHADER);
-    const char* temporal_vsfb = vertexShaderFBCodigo.c_str();
-    glShaderSource(vertexShaderFB, 1, &temporal_vsfb, NULL);
-    glCompileShader(vertexShaderFB);
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &exito);
-    if (exito) {
-        std::cout << "Se ha compilado el Vertex Shader del Frame Buffer\n";
-    }
-    else {
-        std::cout << "Ha fallado el Vertex Shader del Frame Buffer\n";
-    }
-
-    // fragment shader
-    int fragmentShaderFB = glCreateShader(GL_FRAGMENT_SHADER);
-    const char* temporal_fsfb = fragmentShaderFBCodigo.c_str();
-    glShaderSource(fragmentShaderFB, 1, &temporal_fsfb, NULL);
-    glCompileShader(fragmentShaderFB);
-
-    glGetShaderiv(fragmentShaderFB, GL_COMPILE_STATUS, &exito);
-    if (exito) {
-        std::cout << "Se ha compilado el Fragment Shader del Frame Buffer\n";
-    }
-    else {
-        std::cout << "Ha fallado el Fragment Shader del Frame Buffer\n";
-    }
-
-    unsigned int id_programa_fb = glCreateProgram();
-    glAttachShader(id_programa_fb, vertexShaderFB);
-    glAttachShader(id_programa_fb, fragmentShaderFB);
-    glLinkProgram(id_programa_fb);
-
-    glUseProgram(id_programa_fb);
+    Shader post("vertex_post.shader", "fragment_post.shader");
+    unsigned int id_post = post.getId();
 
 
 
@@ -410,47 +248,37 @@ int main()
 
     
 
+
+
+
     // DEPTH TESTS
-    //unsigned int FBO;
-    //glGenFramebuffers(1, &FBO);
-    //glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     
+    Shader sombras("vertex_profundidad_luz.shader", "fragment_profundidad_luz.shader");
+    unsigned int id_sombras = sombras.getId();
+
+
+    // 
+    unsigned int FBO_sombras;
+    glGenFramebuffers(1, &FBO_sombras);
     unsigned int calidad_sombras = 1024;
 
     unsigned int mapa_profundidad;
     glGenTextures(1, &mapa_profundidad);
     glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
    
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, calidad_sombras, calidad_sombras, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mapa_profundidad, 0);
-    //glDrawBuffer(GL_NONE);
-    //glReadBuffer(GL_NONE);
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, calidad_sombras, calidad_sombras, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 
-    // 1. Comprobar la profundidad
-    glViewport(0, 0, calidad_sombras, calidad_sombras);
-    //glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    // 1.1 Dibujar
-    glClear(GL_DEPTH_BUFFER_BIT);
-    // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
-    // activar shader, matrices de transformacion, uniformes sin sombras
-    // draw();
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO_sombras);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mapa_profundidad, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // 2. Dibujar la escena como una textura de sombras
-    glViewport(0, 0, ANCHO_V, ALTO_V);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
-    // activar shader, matrices de transformacion, uniformes
-    glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
-    // draw();
 
 
 
@@ -546,11 +374,7 @@ int main()
 
 
     
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
 
     float dif_tiempo = 0.0f;
     float ultimo_tiempo = 0.0f;
@@ -626,41 +450,51 @@ int main()
 
 
 
-        // Para usar el frambuffer nuevo hay que:
-        // 1. Renderizar todo con el nuevo Framebuffer - es de lectura y escritura - quiero poder leer los datos de la escena
-        // 2. Bindear al framebuffer por defecto - 0 
-        // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
-        //     3.1. Va a requerir un dibujo sobre la pantalla - shader que dibuje la pantalla (porque es un textura)
-        //     3.2. Dibujar un plano semitransparente en el viewport
 
 
-        glViewport(0, 0, ANCHO_V, ALTO_V); // Independiente al FRAME BUFFER
+        // 1. Comprobar la profundidad - DEPTH TESTING
+        sombras.use();
+        glViewport(0, 0, calidad_sombras, calidad_sombras);
 
-        // 1. PRIMER PASADA
-        // con el nuevo Framebuffer 
-        glBindFramebuffer(GL_FRAMEBUFFER, FBO); // BUFFER POST
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // BUFFER POST - PIXELES - FRAMEBUFFER
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // DIBUJADO - FONDO - Relacionado con el renderizado
-        glEnable(GL_DEPTH_TEST); // BUFFER POST - DPETH - FRAMEBUFFER
+        float near_luz = 1.0f, far_luz = 7.0f;
+        glm::mat4 matriz_rayos_luz = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_luz, far_luz);
+        glm::mat4 matriz_vista_luz = glm::lookAt(glm::vec3(0.5, 0.5, 10.0), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        matriz_vista_luz = matriz_rayos_luz * matriz_vista_luz;
 
-        // renderizar todo
-   
+        int vista_luz = glGetUniformLocation(id_programa, "vista_luz");
+        glUniformMatrix4fv(vista_luz, 1, GL_FALSE, glm::value_ptr(matriz_vista_luz));
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO_sombras);
+        // 1.1 Dibujar
+        glClear(GL_DEPTH_BUFFER_BIT);
+        // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
+        // activar shader, matrices de transformacion, uniformes sin sombras
+        // draw();
+        c.draw(sombras.getId());
+        c2.draw(sombras.getId());
+        c3.draw(sombras.getId());
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        /// RENDERIZADO NORMAL - START
-        glUseProgram(id_programa); // shader normal
+
+
+
+        // 2. Dibujar la escena como una textura de sombras
+        normal.use();
+        glViewport(0, 0, ANCHO_V, ALTO_V);
+
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
+        // activar shader, matrices de transformacion, uniformes
 
         int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
         glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
-
         int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
         glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
-
         int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
         glUniform1f(modificador_de_intensidadAmbiente, 0.2);
-
         int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
         glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
-
         int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
         glUniform1i(modificador_de_datosTextura, 0);
 
@@ -671,7 +505,6 @@ int main()
             up_camara
         );
         glUniformMatrix4fv(vista, 1, GL_FALSE, glm::value_ptr(ident2));
-
         int proy = glGetUniformLocation(id_programa, "proy");
         glm::mat4 ident3 = glm::perspective( // conica
             glm::radians(fov),
@@ -680,6 +513,40 @@ int main()
             100.0f
         );
         glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
+
+        glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
+        c.draw(id_programa);
+        c2.draw(id_programa);
+        c3.draw(id_programa);
+
+        sist_textos->renderText("aT", 300, -100, 2);
+        glUseProgram(id_programa);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Para usar el frambuffer nuevo hay que:
+        // 1. Renderizar todo con el nuevo Framebuffer - es de lectura y escritura - quiero poder leer los datos de la escena
+        // 2. Bindear al framebuffer por defecto - 0 
+        // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
+        //     3.1. Va a requerir un dibujo sobre la pantalla - shader que dibuje la pantalla (porque es un textura)
+        //     3.2. Dibujar un plano semitransparente en el viewport
+
 
 
         if (ReporteColision reporte = c2.colision(&c)) {
@@ -710,26 +577,33 @@ int main()
         // EN EL FRAME BUFFER DE POST SE HA GUARDADO LA ESCENA ENTERA EN SUS BUFFERS. MIENTRAS QUE NO HAGAMOS CLEAR SIGUEN AHI
 
 
-        // 2. Bindear al framebuffer por defecto - 0 
-        // NOTA:  LA ESCENA ENTERA SIGUE AHI
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT); // BUFFER - PIXELES - FRAMEBUFFER
-     
-        // PASAR ESA ESCENA AL FRAME BUFFER NORMAL - con una textura
-        // 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
-        glUseProgram(id_programa_fb); // shader normal
-        /// RENDERIZADO PANTALLA 2D - START
+        ///////////////////////////
+        //// ACTIVAR PARA POST
+        //// 2. Bindear al framebuffer por defecto - 0 
+        //// NOTA:  LA ESCENA ENTERA SIGUE AHI
+        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        //glClear(GL_COLOR_BUFFER_BIT); // BUFFER - PIXELES - FRAMEBUFFER
 
-        // uniformes
+        //// PASAR ESA ESCENA AL FRAME BUFFER NORMAL - con una textura
+        //// 3. Dibujar, sobre la pantalla, lo que hay en el framebuffer, modificado 
+        //post.use(); // shader fb
+        ///// RENDERIZADO PANTALLA 2D - START
 
-        // dibujar sin EBO
-        glBindVertexArray(VAO_FB);
-        glDisable(GL_DEPTH_TEST);
-        glBindTexture(GL_TEXTURE_2D, textura_fb);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-        /// RENDERIZADO PANTALLA 2D - END
+        //// uniformes
+
+        //// dibujar sin EBO
+        //glBindVertexArray(VAO_FB);
+        //glDisable(GL_DEPTH_TEST);
+        //glBindTexture(GL_TEXTURE_2D, textura_fb);
+
+        //glDrawArrays(GL_TRIANGLES, 0, 6);
+        //glBindVertexArray(0);
+        ///// RENDERIZADO PANTALLA 2D - END
+        ///////////////////////////
+
+       
+
 
         glfwSwapBuffers(ventana);
         glfwPollEvents();

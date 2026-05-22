@@ -132,10 +132,19 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Octaedro.cpp" />
     <ClCompile Include="OpenGLMath.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SistemaTexto.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ECS.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragment_normal.shader" />
+    <None Include="fragment_post.shader" />
+    <None Include="fragment_profundidad_luz.shader" />
+    <None Include="vertex_normal.shader" />
+    <None Include="vertex_post.shader" />
+    <None Include="vertex_profundidad_luz.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
