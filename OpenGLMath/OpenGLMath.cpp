@@ -232,9 +232,11 @@ int main()
     sist_textos->inicializar();
     loop->addSistema(sist_textos);
 
+    Cubo c4(20, { -10,-10,-25 });
     Cubo c(1);
     Cubo c2(1, { -2,0,0 });
     Cubo c3(1, { 0,-1,0 });
+    
 
     // Preparacion -> nosotros al programar el juego
     sist_eventos->suscribir<Error>( &c2, Callbacks::resetCubo );  // Añadiendo a la lista una reaccion de Cubo cuando ocurre Error con resetCubo
@@ -255,6 +257,10 @@ int main()
     
     Shader sombras("vertex_profundidad_luz.shader", "fragment_profundidad_luz.shader");
     unsigned int id_sombras = sombras.getId();
+    Shader normal_mas_sombras("vertex_normal_con_sombras.shader", "fragment_normal_con_sombras.shader");
+    unsigned int id_normal_mas_sombras = normal_mas_sombras.getId();
+    Shader debug("vertex_debug.shader", "fragment_debug.shader");
+    unsigned int id_debug = debug.getId();
 
 
     // 
@@ -391,6 +397,9 @@ int main()
         //if (posible_componente) componentes.push_back(posible_componente);
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     do {
  
@@ -454,32 +463,41 @@ int main()
 
         // 1. Comprobar la profundidad - DEPTH TESTING
         sombras.use();
-        glViewport(0, 0, calidad_sombras, calidad_sombras);
 
-        float near_luz = 1.0f, far_luz = 7.0f;
+        float near_luz = 1.0f, far_luz = 12.5;
         glm::mat4 matriz_rayos_luz = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_luz, far_luz);
-        glm::mat4 matriz_vista_luz = glm::lookAt(glm::vec3(0.5, 0.5, 10.0), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 matriz_vista_luz = glm::lookAt(glm::vec3(0.5, 0.5, 1.0), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         matriz_vista_luz = matriz_rayos_luz * matriz_vista_luz;
 
-        int vista_luz = glGetUniformLocation(id_programa, "vista_luz");
+        int vista_luz = glGetUniformLocation(id_sombras, "vista_luz");
         glUniformMatrix4fv(vista_luz, 1, GL_FALSE, glm::value_ptr(matriz_vista_luz));
         
+        glViewport(0, 0, calidad_sombras, calidad_sombras);
         glBindFramebuffer(GL_FRAMEBUFFER, FBO_sombras);
         // 1.1 Dibujar
         glClear(GL_DEPTH_BUFFER_BIT);
         // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
         // activar shader, matrices de transformacion, uniformes sin sombras
         // draw();
-        c.draw(sombras.getId());
-        c2.draw(sombras.getId());
-        c3.draw(sombras.getId());
+
+        // TEXTURAS (por si afecta el alpha)
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id_0);
+
+        c4.draw(id_sombras);
+        c.draw(id_sombras);
+        c2.draw(id_sombras);
+        c3.draw(id_sombras);
+
+        
+        //sist_textos->renderText("aT", 300, -100, 2);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 
 
         // 2. Dibujar la escena como una textura de sombras
-        normal.use();
+        normal_mas_sombras.use();
         glViewport(0, 0, ANCHO_V, ALTO_V);
 
 
@@ -487,25 +505,33 @@ int main()
         // configurar shader y calculo matrices - CALCULO DE LAS SOMBRAS
         // activar shader, matrices de transformacion, uniformes
 
-        int modificador_de_colorLuz = glGetUniformLocation(id_programa, "colorLuz");
+        int modificador_de_colorLuz = glGetUniformLocation(id_normal_mas_sombras, "colorLuz");
         glUniform3f(modificador_de_colorLuz, 1.0, 1.0, 1.0);
-        int modificador_de_posLuz = glGetUniformLocation(id_programa, "posLuz");
+        int modificador_de_posLuz = glGetUniformLocation(id_normal_mas_sombras, "posLuz");
         glUniform3f(modificador_de_posLuz, 0.5, 0.5, 10.0);
-        int modificador_de_intensidadAmbiente = glGetUniformLocation(id_programa, "intensidadAmbiente");
+        int modificador_de_intensidadAmbiente = glGetUniformLocation(id_normal_mas_sombras, "intensidadAmbiente");
         glUniform1f(modificador_de_intensidadAmbiente, 0.2);
-        int modificador_de_posCamara = glGetUniformLocation(id_programa, "posCamara");
+        int modificador_de_posCamara = glGetUniformLocation(id_normal_mas_sombras, "posCamara");
         glUniform3f(modificador_de_posCamara, pos_camara.x, pos_camara.y, pos_camara.z);
-        int modificador_de_datosTextura = glGetUniformLocation(id_programa, "datosTextura");
-        glUniform1i(modificador_de_datosTextura, 0);
 
-        int vista = glGetUniformLocation(id_programa, "vista");
+
+        int modificador_de_datosTextura = glGetUniformLocation(id_normal_mas_sombras, "datosTextura");
+        glUniform1i(modificador_de_datosTextura, 0);
+        int modificador_de_mapa_sombras = glGetUniformLocation(id_normal_mas_sombras, "mapa_sombras"); // NO OS OLVIDES DE LA TEXTURA DE LA SOMBRA
+        glUniform1i(modificador_de_mapa_sombras, 1);
+
+        int modificador_de_vista_luz = glGetUniformLocation(id_normal_mas_sombras, "vista_luz");
+        glUniformMatrix4fv(modificador_de_vista_luz, 1, GL_FALSE, glm::value_ptr(matriz_vista_luz));
+
+
+        int vista = glGetUniformLocation(id_normal_mas_sombras, "vista");
         glm::mat4 ident2 = glm::lookAt(
             pos_camara,
             pos_camara + frente_camara,
             up_camara
         );
         glUniformMatrix4fv(vista, 1, GL_FALSE, glm::value_ptr(ident2));
-        int proy = glGetUniformLocation(id_programa, "proy");
+        int proy = glGetUniformLocation(id_normal_mas_sombras, "proy");
         glm::mat4 ident3 = glm::perspective( // conica
             glm::radians(fov),
             (float)ANCHO_V / ALTO_V,
@@ -514,21 +540,47 @@ int main()
         );
         glUniformMatrix4fv(proy, 1, GL_FALSE, glm::value_ptr(ident3));
 
+        // MEZCLA DE TEXTURAS
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id_0);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
-        c.draw(id_programa);
-        c2.draw(id_programa);
-        c3.draw(id_programa);
 
-        sist_textos->renderText("aT", 300, -100, 2);
-        glUseProgram(id_programa);
+        // RESET
+        glActiveTexture(GL_TEXTURE0);
+
+        c4.draw(id_normal_mas_sombras);
+        c.draw(id_normal_mas_sombras);
+        c2.draw(id_normal_mas_sombras);
+        c3.draw(id_normal_mas_sombras);
+        
+
+        //sist_textos->renderText("aT", 300, -100, 2);
+        glUseProgram(id_normal_mas_sombras);
 
 
 
 
-
-
-
-
+        ///////////////////////////
+        // SI HABILITAIS TODO ESTO PODEIS VER LA TEXTURA QUE HEMOS GENERADO CON EL FRAMEBUFFER !!
+        ///////////////////////////
+        //
+        //debug.use();
+        //int modificador_de_near_plane = glGetUniformLocation(id_debug, "near_plane");
+        //glUniform1f(modificador_de_near_plane, near_luz);
+        //int modificador_de_far_plane = glGetUniformLocation(id_debug, "far_plane");
+        //glUniform1f(modificador_de_far_plane, far_luz);
+        //int modificador_de_depthMap = glGetUniformLocation(id_debug, "depthMap");
+        //glUniform1f(modificador_de_depthMap, 0);
+        //
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, mapa_profundidad);
+        //glBindVertexArray(VAO_FB);
+        //
+        //glDrawArrays(GL_TRIANGLES, 0, 6);
+        //glBindVertexArray(0);
+        //
+        ///////////////////////////
 
 
 
@@ -565,13 +617,17 @@ int main()
         c.update(dif_tiempo);
         c2.update(dif_tiempo);
 
-        glBindTexture(GL_TEXTURE_2D, texture_id_0);
-        c.draw(id_programa);
-        c2.draw(id_programa);
-        c3.draw(id_programa);
+        //glBindTexture(GL_TEXTURE_2D, texture_id_0);
+        //c.draw(id_programa);
+        //c2.draw(id_programa);
+        //c3.draw(id_programa);
 
-        sist_textos->renderText("aT", 300, -100, 2);
-        glUseProgram(id_programa);
+        //sist_textos->renderText("aT", 300, -100, 2);
+        //glUseProgram(id_programa);
+
+
+
+
         /// RENDERIZADO NORMAL - END
 
         // EN EL FRAME BUFFER DE POST SE HA GUARDADO LA ESCENA ENTERA EN SUS BUFFERS. MIENTRAS QUE NO HAGAMOS CLEAR SIGUEN AHI

@@ -46,11 +46,35 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex_normal.shader" />
-    <None Include="fragment_normal.shader" />
-    <None Include="vertex_post.shader" />
-    <None Include="fragment_post.shader" />
-    <None Include="fragment_profundidad_luz.shader" />
-    <None Include="vertex_profundidad_luz.shader" />
+    <None Include="fragment_normal.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="fragment_post.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="fragment_profundidad_luz.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertex_normal.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertex_post.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertex_profundidad_luz.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="fragment_normal_con_sombras.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertex_normal_con_sombras.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="vertex_debug.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="fragment_debug.shader">
+      <Filter>Archivos de recursos</Filter>
+    </None>
   </ItemGroup>
 </Project>

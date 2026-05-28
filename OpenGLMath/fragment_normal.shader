@@ -27,7 +27,7 @@ vec3 luz_difusa = colorLuz * intensidadDifusa * (1.0f - intensidadAmbiente );
 
 // Calc luz especular
 vec3 dir_camara = normalize(posCamara - posicionVertice); 
-vec3 dir_reflejada = reflect(-dir_luz, normalVertice); 
+vec3 dir_reflejada = reflect(-dir_luz, normalUnitaria); 
 float fuerzaEspecular = 1.0f;
 float intensidadEspecular = pow( max(dot(dir_camara, dir_reflejada), 0.0f), 32); 
 vec3 luz_especular = colorLuz * intensidadEspecular * fuerzaEspecular; 
